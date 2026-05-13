@@ -1,0 +1,12 @@
+{
+  "name": "opassist",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && uvicorn main:app --reload",
+    "build:frontend": "cd frontend && npm run build",
+    "lint:frontend": "cd frontend && npm run lint",
+    "typecheck:frontend": "cd frontend && npm run typecheck"
+  }
+}
