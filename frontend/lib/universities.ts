@@ -1,0 +1,15 @@
+export const UNIVERSITIES = [
+  'IIT Madras',
+  'IIT Bombay',
+  'IIT Delhi',
+  'IIT Roorkee',
+  'IIT Kanpur',
+  'IIT Kharagpur',
+  'BITS Pilani',
+  'NIT Trichy',
+  'NIT Warangal',
+  'DTU',
+  'NSUT',
+  'IIIT Hyderabad',
+  'Other',
+]
