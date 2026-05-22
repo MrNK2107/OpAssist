@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpAssist</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      width: 320px;
+      padding: 16px;
+      background: #0a0a0a;
+      color: #fafafa;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #262626;
+    }
+    .logo { font-size: 18px; font-weight: bold; }
+    .status {
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .status.success { background: #16a34a20; color: #22c55e; }
+    .status.info { background: #3b82f620; color: #60a5fa; }
+    .status.error { background: #ef444420; color: #f87171; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+    }
+    .btn-primary {
+      background: #3b82f6;
+      color: white;
+      margin-bottom: 8px;
+    }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-outline {
+      background: transparent;
+      border: 1px solid #404040;
+      color: #fafafa;
+    }
+    .btn-outline:hover { background: #1a1a1a; }
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .saved-list {
+      margin-top: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .saved-item {
+      padding: 8px;
+      border-bottom: 1px solid #262626;
+      font-size: 13px;
+    }
+    .saved-item:last-child { border-bottom: none; }
+    .footer {
+      margin-top: 12px;
+      text-align: center;
+      font-size: 11px;
+      color: #737373;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="logo">OpAssist</span>
+  </div>
+
+  <div id="status" class="status info">Checking page...</div>
+
+  <button id="saveBtn" class="btn btn-primary" disabled>Save to OpAssist</button>
+  <a href="http://localhost:3000/dashboard" target="_blank" class="btn btn-outline">Open Dashboard</a>
+
+  <div id="savedList" class="saved-list"></div>
+
+  <div class="footer">Opportunities saved from supported sites</div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
