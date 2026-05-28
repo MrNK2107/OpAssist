@@ -8,10 +8,12 @@ from enum import Enum
 class OpportunityType(str, Enum):
     hackathon = "hackathon"
     internship = "internship"
+    job = "job"
     scholarship = "scholarship"
     oss = "oss"
     ambassador = "ambassador"
     event = "event"
+    job = "job"
 
 
 class DifficultyLevel(str, Enum):
