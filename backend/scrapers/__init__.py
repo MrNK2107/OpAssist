@@ -7,3 +7,14 @@ from .devpost import DevpostScraper
 from .hack2skill import Hack2SkillScraper
 from .mlh import MLHScraper
 from .internshala import InternshalaScraper
+from .internshala_jobs import InternshalaJobsScraper
+from .naukri import NaukriScraper
+from .adzuna import AdzunaScraper
+from .buddy4study import Buddy4StudyScraper
+from .ambassador import AmbassadorScraper
+from .fellowship import FellowshipScraper
+from .internshala_jobs import InternshalaJobsScraper
+from .naukri import NaukriScraper
+from .adzuna import AdzunaScraper
+from .buddy4study import Buddy4StudyScraper
+from .ambassador import AmbassadorScraper

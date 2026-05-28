@@ -170,6 +170,12 @@ def run_full_scrape() -> dict:
     from scrapers.hack2skill import Hack2SkillScraper
     from scrapers.mlh import MLHScraper
     from scrapers.internshala import InternshalaScraper
+    from scrapers.internshala_jobs import InternshalaJobsScraper
+    from scrapers.naukri import NaukriScraper
+    from scrapers.adzuna import AdzunaScraper
+    from scrapers.buddy4study import Buddy4StudyScraper
+    from scrapers.ambassador import AmbassadorScraper
+    from scrapers.fellowship import FellowshipScraper
 
     scrapers = [
         (DevfolioScraper, "devfolio"),
@@ -180,6 +186,12 @@ def run_full_scrape() -> dict:
         (Hack2SkillScraper, "hack2skill"),
         (MLHScraper, "mlh"),
         (InternshalaScraper, "internshala"),
+        (InternshalaJobsScraper, "internshala_jobs"),
+        (NaukriScraper, "naukri"),
+        (AdzunaScraper, "adzuna"),
+        (Buddy4StudyScraper, "buddy4study"),
+        (AmbassadorScraper, "ambassador"),
+        (FellowshipScraper, "fellowship"),
     ]
 
     results = {}
