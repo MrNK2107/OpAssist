@@ -9,7 +9,7 @@ import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-rea
 import { api } from '@/lib/api'
 import type { Opportunity } from '@/types/opportunity'
 
-const TYPES = ['hackathon', 'internship', 'scholarship', 'oss', 'ambassador', 'event']
+const TYPES = ['hackathon', 'internship', 'scholarship', 'oss', 'ambassador', 'event', 'job']
 const DIFFICULTIES = ['beginner', 'intermediate', 'advanced']
 
 export default function OpportunitiesPage() {

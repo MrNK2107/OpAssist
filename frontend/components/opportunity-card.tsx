@@ -28,6 +28,7 @@ const typeColors: Record<string, { gradient: string; border: string; text: strin
   oss: { gradient: 'from-amber-500/20 to-orange-500/20', border: 'border-amber-500/20', text: 'text-amber-400' },
   ambassador: { gradient: 'from-pink-500/20 to-rose-500/20', border: 'border-pink-500/20', text: 'text-pink-400' },
   event: { gradient: 'from-sky-500/20 to-indigo-500/20', border: 'border-sky-500/20', text: 'text-sky-400' },
+  job: { gradient: 'from-lime-500/20 to-green-500/20', border: 'border-lime-500/20', text: 'text-lime-400' },
 }
 
 const difficultyColors: Record<string, string> = {

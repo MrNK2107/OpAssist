@@ -162,7 +162,7 @@ export default function Home() {
 
           {/* Description */}
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 animate-fade-in-up leading-relaxed" style={{ animationDelay: '0.2s' }}>
-            All hackathons, open source projects, internships, and scholarships in one feed.
+            All hackathons, jobs, internships, open source projects, and scholarships in one feed.
             Smart AI matching. Track your journey from beginner to professional.
           </p>
 
@@ -331,7 +331,7 @@ export default function Home() {
               </span>
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              From hackathons to scholarships — everything you need to launch your career.
+              From hackathons to jobs to scholarships — everything you need to launch your career.
             </p>
           </div>
 
@@ -339,10 +339,10 @@ export default function Home() {
             {[
               { name: 'Hackathons', count: '500+', icon: '🏆', gradient: 'from-cyan-500/20 to-blue-500/20', border: 'border-cyan-500/20' },
               { name: 'Internships', count: '200+', icon: '💼', gradient: 'from-violet-500/20 to-purple-500/20', border: 'border-violet-500/20' },
+              { name: 'Jobs', count: '1000+', icon: '👔', gradient: 'from-lime-500/20 to-green-500/20', border: 'border-lime-500/20' },
               { name: 'Scholarships', count: '50+', icon: '🎓', gradient: 'from-pink-500/20 to-rose-500/20', border: 'border-pink-500/20' },
               { name: 'Open Source', count: '100+', icon: '💻', gradient: 'from-amber-500/20 to-orange-500/20', border: 'border-amber-500/20' },
               { name: 'Ambassador', count: '30+', icon: '🌟', gradient: 'from-emerald-500/20 to-teal-500/20', border: 'border-emerald-500/20' },
-              { name: 'Events', count: '100+', icon: '📅', gradient: 'from-sky-500/20 to-indigo-500/20', border: 'border-sky-500/20' },
             ].map((type, i) => (
               <Link
                 key={type.name}
