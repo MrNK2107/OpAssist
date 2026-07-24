@@ -7,7 +7,7 @@ import { StatCard } from '@/components/stat-card'
 import { OpportunityCard } from '@/components/opportunity-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Bookmark, Clock, Trophy, Target, ArrowRight, Sparkles } from 'lucide-react'
+import { Bookmark, Clock, Trophy, Target, ArrowRight, Sparkles, Code, Briefcase, GraduationCap } from 'lucide-react'
 import { api } from '@/lib/api'
 import { formatDate, daysUntil } from '@/lib/utils'
 import type { Opportunity } from '@/types/opportunity'
@@ -28,18 +28,33 @@ const item = {
 export default function DashboardPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
   const [stats, setStats] = useState({ bookmarks: 0, applications: 0, inProgress: 0 })
+  const [verticalCounts, setVerticalCounts] = useState({ hackathon: 0, internship: 0, job: 0 })
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [oppData, bookmarkData, appData] = await Promise.all([
-          api.get<{ data: Opportunity[] }>('/api/opportunities?limit=4'),
+          api.get<{ data: Opportunity[]; total: number }>('/api/opportunities?limit=4'),
           api.get<{ data: unknown[] }>('/api/bookmarks'),
           api.get<{ data: { status: string }[] }>('/api/applications'),
         ])
 
         setOpportunities(oppData.data)
+
+        const counts = { hackathon: 0, internship: 0, job: 0 }
+        try {
+          const [hCount, iCount, jCount] = await Promise.all([
+            api.get<{ total: number }>('/api/opportunities?limit=1&type=hackathon'),
+            api.get<{ total: number }>('/api/opportunities?limit=1&type=internship'),
+            api.get<{ total: number }>('/api/opportunities?limit=1&type=job'),
+          ])
+          counts.hackathon = hCount.total
+          counts.internship = iCount.total
+          counts.job = jCount.total
+        } catch {}
+
+        setVerticalCounts(counts)
         setStats({
           bookmarks: bookmarkData.data.length,
           applications: appData.data.length,
@@ -97,6 +112,49 @@ export default function DashboardPage() {
         {statCards.map((stat) => (
           <StatCard key={stat.label} icon={stat.icon} value={stat.value} label={stat.label} gradient={stat.gradient} />
         ))}
+      </motion.div>
+
+      {/* Vertical Stats */}
+      <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Link href="/opportunities?type=hackathon">
+          <Card className="group hover:border-cyan-500/30 transition-all cursor-pointer">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-cyan-500/10">
+                <Code className="h-5 w-5 text-cyan-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold tabular-nums">{verticalCounts.hackathon}</p>
+                <p className="text-sm text-muted-foreground">Hackathons</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/opportunities?type=internship">
+          <Card className="group hover:border-violet-500/30 transition-all cursor-pointer">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-violet-500/10">
+                <GraduationCap className="h-5 w-5 text-violet-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold tabular-nums">{verticalCounts.internship}</p>
+                <p className="text-sm text-muted-foreground">Internships</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+        <Link href="/opportunities?type=job">
+          <Card className="group hover:border-lime-500/30 transition-all cursor-pointer">
+            <CardContent className="p-4 flex items-center gap-4">
+              <div className="p-2 rounded-lg bg-lime-500/10">
+                <Briefcase className="h-5 w-5 text-lime-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold tabular-nums">{verticalCounts.job}</p>
+                <p className="text-sm text-muted-foreground">Jobs</p>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
       </motion.div>
 
       {/* Recommended */}

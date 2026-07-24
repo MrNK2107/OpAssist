@@ -11,6 +11,8 @@ class DevfolioScraper(GenericScraper):
     """Devfolio scraper — hackathons from devfolio.co."""
 
     platform_name = "Devfolio"
+    source_key = "devfolio"
+    verticals = ["hackathon"]
     API_URL = "https://api.devfolio.co/api/hackathons"
     MAX_PAGES = 5
 
@@ -106,10 +108,16 @@ class DevfolioScraper(GenericScraper):
 
             # Description
             description = h.get("tagline") or h.get("desc") or ""
+            if len(description.strip()) < 20:
+                description = self._fallback_description(title, location, tags=[])
 
             # Organizer
             brand = h.get("hackathon_brand") or {}
-            organizer = brand.get("name") or h.get("hackathon_setting", {}).get("organizer_name", "") or ""
+            organizer = (
+                brand.get("name")
+                or h.get("hackathon_setting", {}).get("organizer_name", "")
+                or "Devfolio"
+            )
 
             # Image
             image_url = h.get("cover_img") or settings.get("logo") or ""
@@ -117,6 +125,8 @@ class DevfolioScraper(GenericScraper):
             # Tags from themes
             themes = h.get("themes") or []
             tags = [t.get("name", "") for t in themes if isinstance(t, dict) and t.get("name")]
+            if description.startswith(title) and tags:
+                description = self._fallback_description(title, location, tags)
 
             # Prize from prizes
             prize = self._format_prizes(h.get("prizes") or [])
@@ -158,7 +168,7 @@ class DevfolioScraper(GenericScraper):
             return ", ".join(parts)
         if h.get("is_online"):
             return "Online"
-        return ""
+        return "India"
 
     def _format_prizes(self, prizes: list) -> str:
         if not prizes:
@@ -182,14 +192,19 @@ class DevfolioScraper(GenericScraper):
             elif name:
                 names.append(name)
         if amounts:
-            # Show total of monetary prizes
             total = sum(a for _, a in amounts)
             currency = amounts[0][0] or "USD"
-            if total >= 1000:
-                return f"{currency} {total:,.0f}"
-            return f"{currency} {total:.2f}"
-        # Fall back to prize names (just first few)
-        return ", ".join(names[:3]) if names else ""
+            prize = f"{currency} {total:,.0f}" if total >= 1000 else f"{currency} {total:.2f}"
+            return self._sanitize_prize(prize)
+        return self._sanitize_prize(", ".join(names[:3]) if names else "")
+
+    def _fallback_description(self, title: str, location: str, tags: list[str]) -> str:
+        parts = [f"{title} is a Devfolio hackathon"]
+        if location:
+            parts.append(f"in {location}")
+        if tags:
+            parts.append("focused on " + ", ".join(tags[:5]))
+        return " ".join(parts) + "."
 
     def _normalize_date(self, raw_date) -> str | None:
         if not raw_date:

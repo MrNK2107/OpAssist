@@ -5,11 +5,12 @@ import { OpportunityCard } from '@/components/opportunity-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Search, SlidersHorizontal, ChevronLeft, ChevronRight, Code, GraduationCap, Briefcase, Sparkles } from 'lucide-react'
 import { api } from '@/lib/api'
 import type { Opportunity } from '@/types/opportunity'
 
-const TYPES = ['hackathon', 'internship', 'scholarship', 'oss', 'ambassador', 'event', 'job']
+const CORE_TYPES = ['hackathon', 'internship', 'job'] as const
+const ALL_TYPES = ['hackathon', 'internship', 'job', 'scholarship', 'oss', 'ambassador', 'event']
 const DIFFICULTIES = ['beginner', 'intermediate', 'advanced']
 
 export default function OpportunitiesPage() {
@@ -18,6 +19,14 @@ export default function OpportunitiesPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [typeFilter, setTypeFilter] = useState<string | null>(null)
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const typeParam = params.get('type')
+    if (typeParam && ALL_TYPES.includes(typeParam)) {
+      setTypeFilter(typeParam)
+    }
+  }, [])
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const limit = 20
@@ -70,16 +79,50 @@ export default function OpportunitiesPage() {
           />
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          <div className="flex items-center gap-1">
-            <SlidersHorizontal className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Type:</span>
+        {/* Core vertical quick-filter tabs */}
+        <div className="flex flex-wrap gap-2 pb-2 border-b border-border/30">
+          <div className="flex items-center gap-1 mr-2">
+            <Sparkles className="h-4 w-4 text-cyan-400" />
+            <span className="text-sm font-medium">Jump to:</span>
           </div>
-          {TYPES.map((t) => (
+          {CORE_TYPES.map((t) => {
+            const icons = { hackathon: Code, internship: GraduationCap, job: Briefcase }
+            const Icon = icons[t]
+            const colors = { hackathon: 'text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/10', internship: 'text-violet-400 border-violet-500/30 hover:bg-violet-500/10', job: 'text-lime-400 border-lime-500/30 hover:bg-lime-500/10' }
+            return (
+              <Badge
+                key={t}
+                variant={typeFilter === t ? 'default' : 'outline'}
+                className={`cursor-pointer capitalize gap-1.5 px-3 py-1.5 text-sm ${typeFilter !== t ? colors[t] : ''}`}
+                onClick={() => { setTypeFilter(typeFilter === t ? null : t); setPage(1) }}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {t}
+              </Badge>
+            )
+          })}
+          {typeFilter && (
+            <Badge
+              variant="outline"
+              className="cursor-pointer text-muted-foreground hover:text-foreground"
+              onClick={() => { setTypeFilter(null); setPage(1) }}
+            >
+              Clear
+            </Badge>
+          )}
+        </div>
+
+        {/* All type filters */}
+        <div className="flex flex-wrap gap-1.5">
+          <div className="flex items-center gap-1 mr-1">
+            <SlidersHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">All types:</span>
+          </div>
+          {ALL_TYPES.map((t) => (
             <Badge
               key={t}
-              variant={typeFilter === t ? 'default' : 'outline'}
-              className="cursor-pointer"
+              variant={typeFilter === t ? 'secondary' : 'ghost'}
+              className={`cursor-pointer text-xs ${typeFilter === t ? '' : 'text-muted-foreground hover:text-foreground'}`}
               onClick={() => { setTypeFilter(typeFilter === t ? null : t); setPage(1) }}
             >
               {t}

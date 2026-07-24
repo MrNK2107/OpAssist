@@ -11,6 +11,8 @@ class UnstopScraper(GenericScraper):
     """Unstop scraper — hackathons, internships, scholarships."""
 
     platform_name = "Unstop"
+    source_key = "unstop"
+    verticals = ["hackathon", "internship"]
     API_URL = "https://unstop.com/api/public/opportunity/search-result"
 
     OPPORTUNITY_TYPES = {
@@ -132,7 +134,7 @@ class UnstopScraper(GenericScraper):
                     parts.append(f"{rank}: {cash}" if rank else str(cash))
                 if other:
                     parts.append(other)
-            prize_str = " | ".join(parts)
+            prize_str = self._sanitize_prize(" | ".join(parts))
 
         details = h.get("details") or ""
         plain_desc = re.sub(r"<[^>]+>", " ", details).strip()

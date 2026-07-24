@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     groq_api_key: str = ""
     anthropic_api_key: str = ""
 
+    # API Keys for Scrapers
+    github_token: str = ""
+    adzuna_app_id: str = ""
+    adzuna_api_key: str = ""
+
     # Scraper Settings
     scrape_interval_hours: int = 6
     min_salary: int = 0

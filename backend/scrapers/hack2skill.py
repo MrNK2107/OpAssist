@@ -11,9 +11,11 @@ class Hack2SkillScraper(GenericScraper):
     """Hack2Skill scraper — hackathons from hack2skill.com."""
 
     platform_name = "Hack2Skill"
+    source_key = "hack2skill"
+    verticals = ["hackathon"]
     API_URL = "https://hack2skill.com/api/v1/innovator/public/event/public-list"
     RECORDS_PER_PAGE = 50
-    MAX_PAGES = 10  # Up to 500 events
+    MAX_PAGES = 10
 
     def scrape(self, client: httpx.Client) -> list[dict]:
         logger.info(f"Hack2Skill stage: calling API {self.API_URL}")
@@ -89,17 +91,20 @@ class Hack2SkillScraper(GenericScraper):
             participation = event.get("participation", "")
             if participation:
                 tags.append(participation.lower())
+            title = event.get("title", "").strip()
+            location = "Online" if mode == "VIRTUAL" else "In-Person" if mode == "IN_PERSON" else mode
+            description = f"{title} is a Hack2Skill {location or 'hackathon'} event."
 
             items.append({
-                "title": event.get("title", "").strip(),
+                "title": title,
                 "organizer": "Hack2Skill",
                 "start_date": self._parse_iso_date(event.get("registrationStart")),
                 "end_date": self._parse_iso_date(event.get("submissionEnd")) or deadline,
                 "date": deadline or "",
-                "location": "Online" if mode == "VIRTUAL" else "In-Person" if mode == "IN_PERSON" else mode,
+                "location": location,
                 "link": link,
                 "source_platform": "Hack2Skill",
-                "description": "",
+                "description": description,
                 "prize": "",
                 "tags": tags,
                 "difficulty": self._infer_difficulty(tags),

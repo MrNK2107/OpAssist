@@ -1,9 +1,8 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const isAuthenticated = request.cookies.get('firebase-auth')?.value === 'true'
 
-  // Protected routes
   const protectedPaths = ['/dashboard', '/profile', '/bookmarks', '/applications', '/calendar', '/leaderboard', '/team-finder', '/notifications', '/opportunities']
   const isProtectedPath = protectedPaths.some(path => request.nextUrl.pathname.startsWith(path))
 
@@ -17,7 +16,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages
   const authPaths = ['/login', '/signup', '/get-started']
   const isAuthPath = authPaths.some(path => request.nextUrl.pathname.startsWith(path))
 

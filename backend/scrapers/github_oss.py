@@ -1,4 +1,5 @@
 import logging
+import os
 import re
 from datetime import datetime, timezone
 import httpx
@@ -16,17 +17,26 @@ class GitHubOSSScraper(GenericScraper):
     2. Issues labeled 'help wanted' — maintainer-validated tasks
     3. GSoC organizations — Google Summer of Code participating orgs
 
-    Instead of just scraping top-starred repos, this finds projects that
-    are actively welcoming contributions right now.
+    Requires a GITHUB_TOKEN env var for reasonable rate limits (5k/hr).
+    Without a token, unauthenticated requests are limited to 60/hr.
     """
 
     platform_name = "GitHub"
     API_BASE = "https://api.github.com"
     MAX_RESULTS_PER_QUERY = 100
-    HEADERS = {
-        "Accept": "application/vnd.github+json",
-        "X-GitHub-Api-Version": "2022-11-28",
-    }
+
+    def __init__(self, token: str = ""):
+        super().__init__()
+        self.token = token or os.environ.get("GITHUB_TOKEN", "")
+        self.headers = {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+        if self.token:
+            self.headers["Authorization"] = f"Bearer {self.token}"
+            self.logger.info("GitHubOSS: using authenticated API (5,000 req/hr)")
+        else:
+            self.logger.info("GitHubOSS: no token — using unauthenticated API (60 req/hr)")
 
     # Searches that find contributor-friendly projects
     ISSUE_SEARCHES = [
@@ -114,7 +124,7 @@ class GitHubOSSScraper(GenericScraper):
             "per_page": min(self.MAX_RESULTS_PER_QUERY, 30),  # API limit
         }
 
-        response = client.get(url, params=params, headers=self.HEADERS, timeout=30)
+        response = client.get(url, params=params, headers=self.headers, timeout=30)
 
         if response.status_code == 403:
             logger.warning("GitHubOSS: rate limited on issue search")
@@ -200,7 +210,7 @@ class GitHubOSSScraper(GenericScraper):
             "per_page": 10,
         }
 
-        response = client.get(url, params=params, headers=self.HEADERS, timeout=30)
+        response = client.get(url, params=params, headers=self.headers, timeout=30)
         if not response.is_success:
             return []
 
@@ -250,7 +260,7 @@ class GitHubOSSScraper(GenericScraper):
         try:
             url = f"{self.API_BASE}/repos/{full_name}/labels"
             params = {"per_page": 100}
-            response = client.get(url, params=params, headers=self.HEADERS, timeout=10)
+            response = client.get(url, params=params, headers=self.headers, timeout=10)
             if not response.is_success:
                 return False
             labels = [l.get("name", "").lower() for l in response.json()]
@@ -271,7 +281,7 @@ class GitHubOSSScraper(GenericScraper):
             "per_page": 30,
         }
 
-        response = client.get(url, params=params, headers=self.HEADERS, timeout=30)
+        response = client.get(url, params=params, headers=self.headers, timeout=30)
         if not response.is_success:
             logger.warning(f"GitHubOSS GSoC search: HTTP {response.status_code}")
             return []

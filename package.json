@@ -7,6 +7,8 @@
     "dev:backend": "cd backend && uvicorn main:app --reload",
     "build:frontend": "cd frontend && npm run build",
     "lint:frontend": "cd frontend && npm run lint",
-    "typecheck:frontend": "cd frontend && npm run typecheck"
+    "typecheck:frontend": "cd frontend && npm run typecheck",
+    "scrape": "cd backend && python scripts/run_scraper.py",
+    "scrape:list": "cd backend && python scripts/run_scraper.py --list"
   }
 }

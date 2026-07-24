@@ -12,8 +12,10 @@ class DevpostScraper(GenericScraper):
     """Devpost scraper — hackathons from devpost.com."""
 
     platform_name = "Devpost"
+    source_key = "devpost"
+    verticals = ["hackathon"]
     API_URL = "https://devpost.com/api/hackathons"
-    MAX_PAGES = 5  # Fetch up to 5 pages (45 hackathons at 9/page)
+    MAX_PAGES = 5
 
     def scrape(self, client: httpx.Client) -> list[dict]:
         logger.info(f"Devpost stage: calling API {self.API_URL}")
@@ -108,6 +110,14 @@ class DevpostScraper(GenericScraper):
             if h.get("invite_only"):
                 description_parts.append("Invite only")
 
+            image_url = h.get("thumbnail_url") or ""
+            if image_url.startswith("//"):
+                image_url = f"https:{image_url}"
+
+            description = " | ".join(description_parts) if description_parts else ""
+            if len(description.strip()) < 20:
+                description = self._fallback_description(title, h.get("organization_name") or "Devpost", location, tags)
+
             items.append({
                 "title": title,
                 "organizer": h.get("organization_name") or "",
@@ -117,13 +127,13 @@ class DevpostScraper(GenericScraper):
                 "location": location,
                 "link": url,
                 "source_platform": "Devpost",
-                "description": " | ".join(description_parts) if description_parts else "",
+                "description": description,
                 "prize": prize,
                 "tags": tags,
                 "difficulty": difficulty,
                 "type": "hackathon",
                 "is_closed": not is_open,
-                "image_url": h.get("thumbnail_url") or "",
+                "image_url": image_url,
             })
 
         return items
@@ -184,5 +194,13 @@ class DevpostScraper(GenericScraper):
     def _strip_html(self, text: str) -> str:
         """Remove HTML tags from text."""
         return re.sub(r"<[^>]+>", "", text).strip()
+
+    def _fallback_description(self, title: str, organizer: str, location: str, tags: list[str]) -> str:
+        parts = [f"{title} is a Devpost hackathon hosted by {organizer}"]
+        if location:
+            parts.append(f"in {location}")
+        if tags:
+            parts.append("focused on " + ", ".join(tags[:5]))
+        return " ".join(parts) + "."
 
     # _infer_difficulty inherited from GenericScraper

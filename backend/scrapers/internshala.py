@@ -18,9 +18,11 @@ class InternshalaScraper(GenericScraper):
     """
 
     platform_name = "Internshala"
+    source_key = "internshala"
+    verticals = ["internship"]
     BASE_URL = "https://internshala.com"
     LISTING_URL = f"{BASE_URL}/internships"
-    MAX_PAGES = 3  # ~150 internships per run
+    MAX_PAGES = 3
 
     def scrape(self, client: httpx.Client) -> list[dict]:
         # Pass 1: collect detail URLs and basic data from listing pages
@@ -262,7 +264,7 @@ class InternshalaScraper(GenericScraper):
         """Format a JSON-LD baseSalary into a readable string."""
         value = salary.get("value", {})
         currency = salary.get("currency", "INR")
-        symbol = "₹" if currency == "INR" else f"{currency} "
+        symbol = "Rs." if currency == "INR" else f"{currency} "
 
         if isinstance(value, dict):
             min_val = value.get("minValue")

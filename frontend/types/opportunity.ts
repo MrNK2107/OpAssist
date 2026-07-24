@@ -1,7 +1,9 @@
+export type VerticalType = 'hackathon' | 'internship' | 'job' | 'scholarship' | 'oss' | 'ambassador' | 'event'
+
 export interface Opportunity {
   id: string
   title: string
-  type: string
+  type: VerticalType
   url: string
   source: string
   description: string

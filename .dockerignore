@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+.git
+.env
+.env.example
+venv
+node_modules
+.next
+frontend/
+extension/
+supabase/

@@ -16,6 +16,8 @@ class InternshalaJobsScraper(GenericScraper):
     """
 
     platform_name = "InternshalaJobs"
+    source_key = "internshala_jobs"
+    verticals = ["job"]
     BASE_URL = "https://internshala.com"
     LISTING_URLS = [
         f"{BASE_URL}/fresher-jobs",
@@ -114,6 +116,7 @@ class InternshalaJobsScraper(GenericScraper):
 
         # Skills / tags
         tags = [s.get_text(strip=True) for s in card.select("div.job_skill") if s.get_text(strip=True)]
+        exp_min, exp_max = self._parse_experience(experience)
 
         # Description
         desc_el = card.select_one(".about_job .text")
@@ -143,12 +146,30 @@ class InternshalaJobsScraper(GenericScraper):
             "description": description,
             "location": location,
             "prize": salary,
+            "experience_min": exp_min,
+            "experience_max": exp_max,
+            "employment_type": "full-time",
             "date": deadline if deadline else "",
             "tags": tags,
-            "difficulty": self._infer_difficulty(tags),
+            "difficulty": self._resolve_experience_level(exp_min, exp_max, title, tags),
             "image_url": image_url,
             "is_closed": False,
         }
+
+    @staticmethod
+    def _parse_experience(experience: str) -> tuple[int | None, int | None]:
+        if not experience:
+            return None, None
+        match = re.search(r"(\d+)\s*[-–to]+\s*(\d+)", experience)
+        if match:
+            return int(match.group(1)), int(match.group(2))
+        match = re.search(r"(\d+)\s*\+?\s*(?:year|yr)", experience, re.IGNORECASE)
+        if match:
+            value = int(match.group(1))
+            return value, value + 2
+        if re.search(r"fresher|0\s*(?:year|yr)", experience, re.IGNORECASE):
+            return 0, 1
+        return None, None
 
     def _infer_deadline_from_posted(self, posted_text: str) -> str:
         if not posted_text:

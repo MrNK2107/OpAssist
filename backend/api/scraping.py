@@ -2,6 +2,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends, Query
 from database.supabase_client import db
 from config import get_settings
 from api.deps import get_current_user_id
+from scrapers import SCRAPER_REGISTRY, get_all_source_keys, get_scrapers_for_vertical
+from services.scraper_health import health_tracker
 
 settings = get_settings()
 router = APIRouter()
@@ -9,27 +11,25 @@ router = APIRouter()
 
 @router.post("/trigger")
 async def trigger_scrape() -> dict:
-    """Trigger manual scrape."""
     from services.scraper_service import run_full_scrape
-
     try:
         result = run_full_scrape()
-        return {
-            "message": "Scrape completed",
-            "status": "done",
-            "result": result,
-        }
+        return {"message": "Scrape completed", "status": "done", "result": result}
     except Exception as exc:
-        return {
-            "message": "Scrape failed",
-            "status": "error",
-            "error": str(exc),
-        }
+        return {"message": "Scrape failed", "status": "error", "error": str(exc)}
+
+
+@router.post("/trigger/{vertical}")
+async def trigger_vertical_scrape(vertical: str) -> dict:
+    from services.scraper_service import run_scrape_for_vertical
+    if vertical not in ("hackathon", "internship", "job"):
+        return {"message": f"Invalid vertical: {vertical}", "status": "error"}
+    result = run_scrape_for_vertical(vertical)
+    return {"message": f"Scrape completed for {vertical}", "status": "done", "result": result}
 
 
 @router.get("/status")
 async def get_scrape_status() -> dict:
-    """Get scrape status — counts by source from DB."""
     from services.scraper_service import get_last_scrape_info
     from scheduler.jobs import scheduler
 
@@ -42,10 +42,7 @@ async def get_scrape_status() -> dict:
         src = row.get("source", "unknown")
         sources[src] = sources.get(src, 0) + 1
 
-    # Get last run info from scraper service
     scrape_info = get_last_scrape_info()
-
-    # Get next run time from scheduler
     next_run = None
     try:
         job = scheduler.get_job("full_scrape")
@@ -63,66 +60,63 @@ async def get_scrape_status() -> dict:
     }
 
 
+@router.get("/health")
+async def get_scraper_health() -> dict:
+    return {
+        "summary": health_tracker.summary(),
+        "sources": health_tracker.get_all_stats(),
+        "registry": {
+            k: {
+                "name": v.name,
+                "verticals": v.verticals,
+                "priority": v.priority,
+                "status": v.status,
+                "requires_playwright": v.requires_playwright,
+            }
+            for k, v in SCRAPER_REGISTRY.items()
+        },
+    }
+
+
 @router.post("/source/{source}/toggle")
 async def toggle_source(
     source: str,
     enabled: bool = Query(True),
     user_id: str = Depends(get_current_user_id),
 ) -> dict:
-    """Enable/disable a scraper source."""
+    if source not in SCRAPER_REGISTRY:
+        return {"message": f"Unknown source: {source}", "source": source, "enabled": False}
+
     if not db.client:
         return {"message": f"Source {source} {'enabled' if enabled else 'disabled'}", "source": source, "enabled": enabled}
 
-    result = (
-        db.client.table("scraper_config")
-        .upsert({"source": source, "enabled": enabled}, on_conflict="source")
-        .execute()
-    )
-
-    return {
-        "message": f"Source {source} {'enabled' if enabled else 'disabled'}",
-        "source": source,
-        "enabled": enabled,
-    }
+    db.client.table("scraper_config").upsert({"source": source, "enabled": enabled}, on_conflict="source").execute()
+    return {"message": f"Source {source} {'enabled' if enabled else 'disabled'}", "source": source, "enabled": enabled}
 
 
 @router.get("/sources")
 async def get_sources() -> dict:
-    """Get available scraper sources from config table."""
-    if not db.client:
-        return {
-            "sources": [
-                {"name": "devfolio", "enabled": True, "type": "hackathon"},
-                {"name": "unstop", "enabled": True, "type": "hackathon,internship,scholarship"},
-                {"name": "hackerearth", "enabled": True, "type": "challenge,hackathon"},
-                {"name": "github", "enabled": True, "type": "oss,gsoc"},
-                {"name": "devpost", "enabled": True, "type": "hackathon"},
-                {"name": "hack2skill", "enabled": True, "type": "hackathon"},
-                {"name": "mlh", "enabled": True, "type": "hackathon"},
-                {"name": "internshala", "enabled": True, "type": "internship"},
-            ]
-        }
-
-    result = db.client.table("scraper_config").select("*").execute()
-
-    source_types = {
-        "devfolio": "hackathon",
-        "unstop": "hackathon,internship,scholarship",
-        "hackerearth": "challenge,hackathon",
-        "github": "oss,gsoc",
-        "devpost": "hackathon",
-        "hack2skill": "hackathon",
-        "mlh": "hackathon",
-        "internshala": "internship",
-    }
-
     sources = []
-    for row in (result.data or []):
+    for source_key in get_all_source_keys():
+        config = SCRAPER_REGISTRY[source_key]
         sources.append({
-            "name": row["source"],
-            "enabled": row["enabled"],
-            "type": source_types.get(row["source"], "other"),
-            "last_run": row.get("last_run"),
+            "name": source_key,
+            "label": config.name,
+            "type": ",".join(config.verticals),
+            "priority": config.priority,
+            "status": config.status,
+            "requires_playwright": config.requires_playwright,
+            "requires_api_key": config.requires_api_key,
+            "interval_hours": config.interval_hours,
+            "description": config.description,
         })
 
-    return {"sources": sources}
+    return {
+        "sources": sorted(sources, key=lambda s: (s["status"] != "active", s["priority"] != "critical")),
+        "total": len(sources),
+        "by_vertical": {
+            "hackathon": len(get_scrapers_for_vertical("hackathon")),
+            "internship": len(get_scrapers_for_vertical("internship")),
+            "job": len(get_scrapers_for_vertical("job")),
+        },
+    }

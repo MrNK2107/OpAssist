@@ -1,9 +1,9 @@
 import logging
 import json
-import html
 import re
 from datetime import datetime, timezone
 import httpx
+from bs4 import BeautifulSoup
 
 from .base import GenericScraper
 
@@ -11,10 +11,16 @@ logger = logging.getLogger(__name__)
 
 
 class MLHScraper(GenericScraper):
-    """MLH scraper — hackathons from the MLH season events page."""
+    """MLH scraper — hackathons from the MLH season events page.
+
+    MLH uses Inertia.js (Laravel-based SPA). The event data is embedded
+    in a script tag as an Inertia JSON payload with component='EventsListing'.
+    """
 
     platform_name = "MLH"
-    URL = "https://www.mlh.com/seasons/2026/events"
+    source_key = "mlh"
+    verticals = ["hackathon"]
+    URL = "https://www.mlh.com/events"
 
     def scrape(self, client: httpx.Client) -> list[dict]:
         logger.info(f"MLH stage: fetching {self.URL}")
@@ -23,7 +29,7 @@ class MLHScraper(GenericScraper):
             logger.warning(f"MLH request failed with status {response.status_code}")
             return []
 
-        data = self._extract_data_page(response.text)
+        data = self._extract_inertia_payload(response.text)
         if not data:
             return []
 
@@ -32,19 +38,26 @@ class MLHScraper(GenericScraper):
         self._log_sample_links(items)
         return items
 
-    def _extract_data_page(self, html_text: str) -> dict | None:
-        """Extract and parse the data-page JSON attribute."""
-        match = re.search(r'data-page="({.*?})"\s*>', html_text, re.DOTALL)
-        if not match:
-            logger.warning("MLH: data-page attribute not found")
-            return None
+    def _extract_inertia_payload(self, html_text: str) -> dict | None:
+        """Extract the Inertia.js JSON payload from a script tag.
 
-        raw = html.unescape(match.group(1))
-        try:
-            return json.loads(raw)
-        except json.JSONDecodeError as e:
-            logger.warning(f"MLH: failed to parse data-page JSON: {e}")
-            return None
+        MLH embeds event data as: {"component":"EventsListing","props":{...}}
+        inside a <script> tag.
+        """
+        soup = BeautifulSoup(html_text, "html.parser")
+        for script in soup.find_all("script"):
+            text = script.get_text() if script.string else ""
+            if "EventsListing" in text:
+                start = text.index("{")
+                end = text.rindex("}") + 1
+                try:
+                    return json.loads(text[start:end])
+                except (json.JSONDecodeError, ValueError) as e:
+                    logger.warning(f"MLH: failed to parse Inertia JSON: {e}")
+                    return None
+
+        logger.warning("MLH: EventsListing payload not found in any script tag")
+        return None
 
     def _parse_events(self, data: dict) -> list[dict]:
         items: list[dict] = []
@@ -90,6 +103,7 @@ class MLHScraper(GenericScraper):
             region = event.get("region", "")
             if region:
                 tags.append(region)
+            description = f"{title} is an MLH {format_type or 'hackathon'} event in {location}."
 
             items.append({
                 "title": title,
@@ -100,7 +114,7 @@ class MLHScraper(GenericScraper):
                 "location": location,
                 "link": link,
                 "source_platform": "MLH",
-                "description": "",
+                "description": description,
                 "prize": "",
                 "tags": tags,
                 "difficulty": "beginner",

@@ -14,13 +14,25 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     # Startup
     print("OpAssist starting up...")
+
+    # 1. Clear expired opportunities immediately
+    try:
+        from services.scraper_service import delete_expired
+        deleted = delete_expired()
+        print(f"Expired cleanup: {deleted} opportunities removed")
+    except Exception as exc:
+        print(f"Expired cleanup failed: {exc}")
+
+    # 2. Start background scheduler
     try:
         from scheduler.jobs import start_scheduler
         start_scheduler(settings.scrape_interval_hours)
-        print(f"Scheduler started (scrape every {settings.scrape_interval_hours}h)")
+        print(f"Scheduler started (scrape every {settings.scrape_interval_hours}h, cleanup every 1h)")
     except Exception as exc:
         print(f"Scheduler failed to start: {exc}")
+
     yield
+
     # Shutdown
     try:
         from scheduler.jobs import stop_scheduler
@@ -119,6 +131,8 @@ async def rate_limit_middleware(request: Request, call_next):
 # Global exception handler to prevent stack trace leaks
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    import logging
+    logging.getLogger(__name__).error(f"Unhandled exception on {request.method} {request.url.path}: {exc}", exc_info=True)
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},

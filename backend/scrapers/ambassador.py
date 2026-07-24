@@ -20,32 +20,33 @@ class AmbassadorScraper(GenericScraper):
     """
 
     platform_name = "Ambassador"
+    source_key = "ambassador"
 
     # Known ambassador program URLs (stable, long-lived)
     PROGRAMS = [
         {
-            "url": "https://developers.google.com/community/gdsc",
-            "name": "Google Developer Student Clubs",
+            "url": "https://developers.google.com/community",
+            "name": "Google Developer Groups on Campus",
             "organizer": "Google",
-            "description": "Lead a GDSC chapter at your university. Build your developer portfolio, learn Google technologies, and impact your campus community.",
+            "description": "Lead or join a Google Developer Group on Campus to learn Google technologies, run hands-on sessions, and build a developer community at your university.",
         },
         {
-            "url": "https://studentambassadors.microsoft.com/",
+            "url": "https://mvp.microsoft.com/studentambassadors",
             "name": "Microsoft Learn Student Ambassadors",
             "organizer": "Microsoft",
             "description": "Join a global community of student leaders. Learn Microsoft technologies, earn certifications, and mentor peers.",
         },
         {
-            "url": "https://education.github.com/experts",
+            "url": "https://github.com/education/students/campus-expert",
             "name": "GitHub Campus Expert",
             "organizer": "GitHub",
             "description": "Become a GitHub Campus Expert. Build technical communities on campus, organize events, and develop leadership skills.",
         },
         {
-            "url": "https://aws.amazon.com/developer/community/community-groups/",
-            "name": "AWS Cloud Club Captain",
+            "url": "https://builder.aws.com/community/student-builder-groups",
+            "name": "AWS Student Builder Group Leader",
             "organizer": "Amazon Web Services",
-            "description": "Lead an AWS Cloud Club at your university. Learn cloud technologies and build a community of cloud enthusiasts.",
+            "description": "Lead an AWS student builder group at your university, organize cloud learning events, and connect students with AWS community resources.",
         },
     ]
 

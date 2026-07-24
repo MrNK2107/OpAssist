@@ -1,7 +1,10 @@
 import logging
+from datetime import datetime, timezone
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
+
+from scrapers import SCRAPER_REGISTRY, get_all_source_keys
 
 logger = logging.getLogger(__name__)
 
@@ -9,10 +12,12 @@ scheduler = AsyncIOScheduler()
 
 
 def start_scheduler(scrape_interval_hours: int = 6):
-    """Start the background scheduler."""
-    from services.scraper_service import run_full_scrape, delete_expired
+    from services.scraper_service import (
+        run_full_scrape, run_scrape_for_vertical,
+        delete_expired, deduplicate_opportunities,
+    )
 
-    # Periodic scraping
+    # Full scrape at the configured interval
     scheduler.add_job(
         run_full_scrape,
         trigger=IntervalTrigger(hours=scrape_interval_hours),
@@ -21,7 +26,38 @@ def start_scheduler(scrape_interval_hours: int = 6):
         replace_existing=True,
     )
 
-    # Hourly expired-entry cleanup
+    # Staggered per-vertical scraping
+    # Jobs and internships scrape more frequently
+    scheduler.add_job(
+        lambda: run_scrape_for_vertical("job"),
+        trigger=IntervalTrigger(hours=4),
+        id="scrape_jobs",
+        name="Jobs scrape (every 4h)",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        lambda: run_scrape_for_vertical("job_lateral"),
+        trigger=IntervalTrigger(hours=6),
+        id="scrape_jobs_lateral",
+        name="Lateral/experienced jobs scrape (every 6h)",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        lambda: run_scrape_for_vertical("internship"),
+        trigger=IntervalTrigger(hours=4),
+        id="scrape_internships",
+        name="Internships scrape (every 4h)",
+        replace_existing=True,
+    )
+    scheduler.add_job(
+        lambda: run_scrape_for_vertical("hackathon"),
+        trigger=IntervalTrigger(hours=8),
+        id="scrape_hackathons",
+        name="Hackathons scrape (every 8h)",
+        replace_existing=True,
+    )
+
+    # Hourly expired cleanup
     scheduler.add_job(
         delete_expired,
         trigger=IntervalTrigger(hours=1),
@@ -30,7 +66,16 @@ def start_scheduler(scrape_interval_hours: int = 6):
         replace_existing=True,
     )
 
-    # Daily deadline check (runs at 9 AM)
+    # Deduplicate every 6 hours
+    scheduler.add_job(
+        deduplicate_opportunities,
+        trigger=IntervalTrigger(hours=6),
+        id="deduplicate",
+        name="Deduplicate opportunities",
+        replace_existing=True,
+    )
+
+    # Daily deadline check at 9 AM
     scheduler.add_job(
         check_deadlines,
         trigger=CronTrigger(hour=9, minute=0),
@@ -40,18 +85,21 @@ def start_scheduler(scrape_interval_hours: int = 6):
     )
 
     scheduler.start()
-    logger.info(f"Scheduler started — scraping every {scrape_interval_hours}h, expired cleanup every 1h, deadline check at 9 AM")
+    logger.info(
+        f"Scheduler started — full scrape every {scrape_interval_hours}h, "
+        f"jobs every 4h, lateral jobs every 6h, internships every 4h, "
+        f"hackathons every 8h, expired cleanup every 1h, "
+        f"dedup every 6h, deadline check at 9 AM"
+    )
 
 
 def stop_scheduler():
-    """Stop the scheduler."""
     if scheduler.running:
         scheduler.shutdown()
         logger.info("Scheduler stopped")
 
 
 async def check_deadlines():
-    """Check for upcoming deadlines and create notification records."""
     from database.supabase_client import db
     from datetime import datetime, timedelta, timezone
 
@@ -59,7 +107,6 @@ async def check_deadlines():
         return
 
     try:
-        # Get opportunities with deadlines in the next 3 days
         today = datetime.now(timezone.utc).date()
         three_days = (today + timedelta(days=3)).isoformat()
 
@@ -77,13 +124,11 @@ async def check_deadlines():
 
         logger.info(f"Found {len(result.data)} opportunities with deadlines in 3 days")
 
-        # For each opportunity, find users who bookmarked or applied
         for opp in result.data:
             opp_id = opp["id"]
             deadline = opp["deadline"]
             title = opp["title"]
 
-            # Calculate days left
             deadline_date = datetime.fromisoformat(deadline).date() if deadline else None
             if not deadline_date:
                 continue
@@ -98,23 +143,18 @@ async def check_deadlines():
                 notif_title = "Deadline Soon"
                 message = f"Deadline in {days_left} days: {title}"
             else:
-                continue  # Skip if more than 3 days away
+                continue
 
-            # Find users who bookmarked this opportunity
             bookmarks = db.client.table("bookmarks").select("user_id").eq("opportunity_id", opp_id).execute()
-            # Find users who applied to this opportunity
             applications = db.client.table("applications").select("user_id").eq("opportunity_id", opp_id).execute()
 
-            # Collect unique user IDs
             user_ids = set()
             for bm in (bookmarks.data or []):
                 user_ids.add(bm["user_id"])
             for app in (applications.data or []):
                 user_ids.add(app["user_id"])
 
-            # Create notifications for each user (skip if already exists today)
             for uid in user_ids:
-                # Check if notification already exists for this opportunity today
                 existing = (
                     db.client.table("notifications")
                     .select("id")

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Rocket, Sparkles } from 'lucide-react'
-import { UNIVERSITIES } from '@/lib/universities'
+import { UniversitySelect } from '@/components/ui/university-select'
 
 function SignupForm() {
   const [name, setName] = useState('')
@@ -130,19 +130,12 @@ function SignupForm() {
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground/80">University</label>
-            <select
-              className="flex h-10 w-full rounded-lg border border-input bg-background/50 backdrop-blur-sm px-3 py-2 text-sm shadow-sm transition-all duration-200 hover:border-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            <UniversitySelect
               value={university}
-              onChange={(e) => setUniversity(e.target.value)}
+              onChange={setUniversity}
+              placeholder="Select your university"
               required
-            >
-              <option value="">Select your university</option>
-              {UNIVERSITIES.map((uni) => (
-                <option key={uni} value={uni}>
-                  {uni}
-                </option>
-              ))}
-            </select>
+            />
           </div>
 
           <div className="space-y-2">

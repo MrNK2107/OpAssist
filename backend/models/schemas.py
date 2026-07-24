@@ -13,7 +13,6 @@ class OpportunityType(str, Enum):
     oss = "oss"
     ambassador = "ambassador"
     event = "event"
-    job = "job"
 
 
 class DifficultyLevel(str, Enum):
@@ -47,7 +46,13 @@ class Opportunity(BaseModel):
     is_offline: bool = False
     image_url: Optional[str] = Field(None, max_length=2000)
     prize: Optional[str] = Field(None, max_length=500)
-    tags: List[str] = Field(default_factory=list, max_length=20)
+    salary_currency: str = "INR"
+    experience_min: Optional[int] = None
+    experience_max: Optional[int] = None
+    employment_type: Optional[str] = None
+    remote: bool = False
+    application_deadline: Optional[str] = None
+    tags: List[str] = Field(default_factory=list, max_length=50)
     difficulty: Optional[str] = None
     is_closed: bool = False
     created_at: Optional[str] = None

@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Bookmark, MapPin, Calendar, Trophy } from 'lucide-react'
+import { Bookmark, MapPin, Calendar, Trophy, Briefcase, GraduationCap, Code } from 'lucide-react'
 import { formatDate, daysUntil, getDeadlineStatus } from '@/lib/utils'
 
 interface OpportunityCardProps {
@@ -53,6 +53,8 @@ export function OpportunityCard({
   const deadlineStatus = deadline ? getDeadlineStatus(deadline) : null
   const daysLeft = deadline ? daysUntil(deadline) : null
   const typeConfig = typeColors[type] || typeColors.hackathon
+  const typeIcons: Record<string, typeof Code> = { hackathon: Code, internship: GraduationCap, job: Briefcase }
+  const TypeIcon = typeIcons[type]
 
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/5">
@@ -66,8 +68,9 @@ export function OpportunityCard({
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <Badge
                   variant="outline"
-                  className={`${typeConfig.border} ${typeConfig.text} bg-gradient-to-r ${typeConfig.gradient} border`}
+                  className={`${typeConfig.border} ${typeConfig.text} bg-gradient-to-r ${typeConfig.gradient} border flex items-center gap-1`}
                 >
+                  {TypeIcon && <TypeIcon className="h-3 w-3" />}
                   {type}
                 </Badge>
                 {difficulty && (
@@ -130,7 +133,25 @@ export function OpportunityCard({
                 <span className="truncate">{location}</span>
               </div>
             )}
-            {prize && (
+            {prize && type === 'hackathon' && (
+              <div className="flex items-center gap-1.5 text-sm text-cyan-300">
+                <Trophy className="h-3.5 w-3.5" />
+                <span className="truncate font-medium">{prize}</span>
+              </div>
+            )}
+            {prize && type === 'internship' && (
+              <div className="flex items-center gap-1.5 text-sm text-violet-300">
+                <GraduationCap className="h-3.5 w-3.5" />
+                <span className="truncate font-medium">Stipend: {prize}</span>
+              </div>
+            )}
+            {prize && type === 'job' && (
+              <div className="flex items-center gap-1.5 text-sm text-lime-300">
+                <Briefcase className="h-3.5 w-3.5" />
+                <span className="truncate font-medium">Salary: {prize}</span>
+              </div>
+            )}
+            {prize && !['hackathon', 'internship', 'job'].includes(type) && (
               <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                 <Trophy className="h-3.5 w-3.5" />
                 <span className="truncate">{prize}</span>
