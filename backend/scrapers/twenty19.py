@@ -107,6 +107,16 @@ class Twenty19Scraper(GenericScraper):
             "li[class*='internship']",
             "li[class*='job']",
             "a[href*='/internship/']",
+            "div[class*='post']",
+            "div[class*='Item']",
+            "div[class*='item']",
+            "div[class*='Row']",
+            "div[class*='row']",
+            "div[class*='Box']",
+            "div[class*='box']",
+            "div[class*='Wrapper']",
+            "div[class*='wrapper']",
+            "section[class*='internship']",
         ]
         for selector in selectors:
             cards = soup.select(selector)
@@ -125,7 +135,7 @@ class Twenty19Scraper(GenericScraper):
                     items.append(item)
             except Exception as exc:
                 logger.debug(f"Twenty19: failed to parse card: {exc}")
-        return items
+        return self._dedupe_by_link(items)
 
     def _parse_card(self, card) -> dict | None:
         title = self._extract_title(card)
@@ -179,7 +189,7 @@ class Twenty19Scraper(GenericScraper):
 
     def _extract_title(self, card) -> str:
         selectors = [
-            "h2 a", "h3 a", "h2", "h3",
+            "h2 a", "h3 a", "h2", "h3", "h4 a", "h4",
             "a[class*='title']", "span[class*='title']",
             "div[class*='title'] a",
             "div[class*='heading'] a",
@@ -188,6 +198,10 @@ class Twenty19Scraper(GenericScraper):
             ".card-title a",
             ".job-title a",
             ".title a",
+            "strong a",
+            "a[class*='heading']",
+            "a[class*='name']",
+            "a[class*='link']",
         ]
         for sel in selectors:
             el = card.select_one(sel)
@@ -344,12 +358,11 @@ class Twenty19Scraper(GenericScraper):
         ]
         seen: set[str] = set()
         tags: list[str] = []
-        for sel in selectors:
-            for el in card.select(sel):
-                text = el.get_text(strip=True)
-                if text and text.lower() not in seen:
-                    seen.add(text.lower())
-                    tags.append(text)
+        # Leaf-only: "[class*='skill']" matches the container *and* its tag spans.
+        for text in self._leaf_texts(card.select(", ".join(selectors))):
+            if text.lower() not in seen:
+                seen.add(text.lower())
+                tags.append(text)
         return tags
 
     def _extract_description(self, card) -> str:

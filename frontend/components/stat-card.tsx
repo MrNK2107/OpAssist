@@ -9,8 +9,8 @@ interface StatCardProps {
 }
 
 const gradientMap = {
-  cyan: 'from-cyan-500/20 to-cyan-500/5 text-cyan-400 border-cyan-500/20',
-  violet: 'from-violet-500/20 to-violet-500/5 text-violet-400 border-violet-500/20',
+  cyan: 'from-amber-500/20 to-amber-500/5 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  violet: 'from-orange-500/20 to-orange-500/5 text-teal-700 dark:text-teal-400 border-orange-500/20',
   pink: 'from-pink-500/20 to-pink-500/5 text-pink-400 border-pink-500/20',
   amber: 'from-amber-500/20 to-amber-500/5 text-amber-400 border-amber-500/20',
 }

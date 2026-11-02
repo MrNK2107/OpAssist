@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useSyncExternalStore } from 'react'
 import { OpportunityCard } from '@/components/opportunity-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,20 +13,21 @@ const CORE_TYPES = ['hackathon', 'internship', 'job'] as const
 const ALL_TYPES = ['hackathon', 'internship', 'job', 'scholarship', 'oss', 'ambassador', 'event']
 const DIFFICULTIES = ['beginner', 'intermediate', 'advanced']
 
+const noopSubscribe = () => () => {}
+function getUrlTypeParam(): string | null {
+  const typeParam = new URLSearchParams(window.location.search).get('type')
+  return typeParam && ALL_TYPES.includes(typeParam) ? typeParam : null
+}
+
 export default function OpportunitiesPage() {
   const [opportunities, setOpportunities] = useState<Opportunity[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [typeFilter, setTypeFilter] = useState<string | null>(null)
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const typeParam = params.get('type')
-    if (typeParam && ALL_TYPES.includes(typeParam)) {
-      setTypeFilter(typeParam)
-    }
-  }, [])
+  // Initial type filter comes from ?type=; once the user picks a filter it overrides the URL.
+  const urlType = useSyncExternalStore(noopSubscribe, getUrlTypeParam, () => null)
+  const [typeOverride, setTypeFilter] = useState<string | null | undefined>(undefined)
+  const typeFilter = typeOverride === undefined ? urlType : typeOverride
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null)
   const [page, setPage] = useState(1)
   const limit = 20
@@ -82,13 +83,13 @@ export default function OpportunitiesPage() {
         {/* Core vertical quick-filter tabs */}
         <div className="flex flex-wrap gap-2 pb-2 border-b border-border/30">
           <div className="flex items-center gap-1 mr-2">
-            <Sparkles className="h-4 w-4 text-cyan-400" />
+            <Sparkles className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             <span className="text-sm font-medium">Jump to:</span>
           </div>
           {CORE_TYPES.map((t) => {
             const icons = { hackathon: Code, internship: GraduationCap, job: Briefcase }
             const Icon = icons[t]
-            const colors = { hackathon: 'text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/10', internship: 'text-violet-400 border-violet-500/30 hover:bg-violet-500/10', job: 'text-lime-400 border-lime-500/30 hover:bg-lime-500/10' }
+            const colors = { hackathon: 'text-amber-600 dark:text-amber-400 border-amber-500/30 hover:bg-amber-500/10', internship: 'text-teal-700 dark:text-teal-400 border-orange-500/30 hover:bg-orange-500/10', job: 'text-lime-400 border-lime-500/30 hover:bg-lime-500/10' }
             return (
               <Badge
                 key={t}

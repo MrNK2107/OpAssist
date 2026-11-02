@@ -8,8 +8,9 @@ import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Rocket, Search, Trophy, Users, Sparkles, ArrowRight } from 'lucide-react'
+import { Search, Trophy, Users, Sparkles, ArrowRight } from 'lucide-react'
 import { UniversitySelect } from '@/components/ui/university-select'
+import { RadarMark, Wordmark } from '@/components/brand/radar-mark'
 
 function GoogleIcon() {
   return (
@@ -98,9 +99,9 @@ function GetStartedForm() {
   if (step === 'university') {
     return (
       <Card className="w-full max-w-md animate-fade-in-up">
-        <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-violet-500 to-pink-500 rounded-t-xl" />
+        <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 rounded-t-xl" />
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">One more thing</CardTitle>
+          <CardTitle as="h1" className="text-2xl">One more thing</CardTitle>
           <CardDescription>Select your university to personalize your experience</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -142,16 +143,12 @@ function GetStartedForm() {
       {/* Left: Branding */}
       <div className="hidden md:block space-y-6">
         <div className="flex items-center gap-2">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-            <Rocket className="w-6 h-6 text-white" />
-          </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
-            OpAssist
-          </span>
+          <RadarMark className="w-10 h-10" />
+          <Wordmark className="text-2xl font-bold" />
         </div>
         <h1 className="text-3xl font-bold">
           Your university career{' '}
-          <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">
+          <span className="text-amber-600 dark:text-amber-400">
             starts here
           </span>
         </h1>
@@ -160,14 +157,14 @@ function GetStartedForm() {
         </p>
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/20">
-              <Search className="h-4 w-4 text-cyan-400" />
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-amber-500/20 to-blue-500/20 border border-amber-500/20">
+              <Search className="h-4 w-4 text-amber-600 dark:text-amber-400" />
             </div>
             AI-powered opportunity matching
           </div>
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/20">
-              <Trophy className="h-4 w-4 text-violet-400" />
+            <div className="p-1.5 rounded-lg bg-gradient-to-br from-orange-500/20 to-purple-500/20 border border-orange-500/20">
+              <Trophy className="h-4 w-4 text-teal-700 dark:text-teal-400" />
             </div>
             Track your progress from beginner to pro
           </div>
@@ -182,12 +179,10 @@ function GetStartedForm() {
 
       {/* Right: Auth form */}
       <Card className="w-full max-w-md justify-self-center">
-        <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-violet-500 to-pink-500 rounded-t-xl" />
+        <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 rounded-t-xl" />
         <CardHeader className="text-center">
           <div className="flex justify-center mb-2 md:hidden">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center">
-              <Rocket className="h-5 w-5 text-white" />
-            </div>
+            <RadarMark className="w-10 h-10" />
           </div>
           <CardTitle className="text-2xl">Get started</CardTitle>
           <CardDescription>Create your free account</CardDescription>
@@ -277,7 +272,7 @@ function GetStartedForm() {
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium">
+            <Link href="/login" className="text-amber-600 dark:text-amber-400 hover:text-amber-300 transition-colors font-medium">
               Sign in
             </Link>
           </p>

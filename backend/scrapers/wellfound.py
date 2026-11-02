@@ -19,19 +19,10 @@ class WellfoundScraper(GenericScraper):
     requires_playwright = True
 
     BASE_URL = "https://wellfound.com"
-    MAX_PAGES = 3
+    MAX_PAGES = 1
 
-    ROLE_QUERIES = [
-        "software-engineer",
-        "backend-engineer",
-        "frontend-engineer",
-        "fullstack-engineer",
-        "data-scientist",
-        "product-manager",
-        "devops-engineer",
-        "machine-learning-engineer",
-        "technical-lead",
-        "engineering-manager",
+    SEARCH_URLS = [
+        f"{BASE_URL}/jobs?location=india",
     ]
 
     EXPERIENCE_KEYWORDS = {
@@ -52,55 +43,14 @@ class WellfoundScraper(GenericScraper):
             "Referer": f"{self.BASE_URL}/",
         })
 
-        try:
-            items = self._fetch_httpx(client)
-            if items:
-                logger.info(f"Wellfound: {len(items)} items via httpx")
-                return items
-        except ScrapeBlockedError:
-            logger.info("Wellfound: httpx blocked (Cloudflare/DataDome), falling back to Playwright")
-
         return self._with_playwright(self._playwright_scrape)
-
-    def _fetch_httpx(self, client: httpx.Client) -> list[dict]:
-        all_items = []
-        seen_urls = set()
-
-        for role in self.ROLE_QUERIES:
-            for page in range(1, self.MAX_PAGES + 1):
-                url = f"{self.BASE_URL}/role/l/{role}/india?page={page}"
-                logger.info(f"Wellfound httpx: {role} page {page}")
-
-                try:
-                    response = client.get(url, timeout=30)
-                    if response.status_code == 403:
-                        raise ScrapeBlockedError(source=self.source_key, status_code=403)
-                    if not response.is_success:
-                        logger.warning(f"Wellfound httpx {role} page {page}: HTTP {response.status_code}")
-                        break
-
-                    items = self._parse_listing_page(response.text, role)
-                    for item in items:
-                        if item["link"] not in seen_urls:
-                            seen_urls.add(item["link"])
-                            all_items.append(item)
-
-                    if not items:
-                        break
-
-                except ScrapeBlockedError:
-                    raise
-                except Exception as exc:
-                    logger.warning(f"Wellfound httpx {role} page {page} error: {exc}")
-                    break
-
-        return all_items
 
     def _playwright_scrape(self, page) -> list[dict]:
         page.add_init_script("""
             Object.defineProperty(navigator, 'webdriver', { get: () => false });
             Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3,4,5] });
             Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+            Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
             window.chrome = { runtime: {} };
         """)
 
@@ -112,47 +62,59 @@ class WellfoundScraper(GenericScraper):
         all_items = []
         seen_urls = set()
 
-        for role in self.ROLE_QUERIES:
-            for page_num in range(1, self.MAX_PAGES + 1):
-                url = f"{self.BASE_URL}/role/l/{role}/india?page={page_num}"
-                logger.info(f"Wellfound PW: {role} page {page_num}")
+        for base_url in self.SEARCH_URLS:
+            url = f"{base_url}&page=1" if "?" in base_url else f"{base_url}?page=1"
+            logger.info(f"Wellfound PW: fetching {url}")
 
-                try:
-                    page.goto(url, wait_until="domcontentloaded", timeout=60000)
-                    page.wait_for_timeout(3000 + page_num * 500)
+            try:
+                page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                page.wait_for_timeout(5000)
 
-                    if page.url.startswith(("https://wellfound.com/auth", "https://auth.wellfound.com")):
-                        logger.warning(f"Wellfound: authwall on role {role}")
+                if page.url.startswith(("https://wellfound.com/auth", "https://auth.wellfound.com")):
+                    logger.warning(f"Wellfound: authwall on {url}")
+                    continue
+
+                card_selectors = [
+                    "a[href*='/company/']",
+                    "div[class*='job']",
+                    "li[class*='job']",
+                    "article[class*='job']",
+                    "div[class*='card']",
+                    "a[href*='/startup/']",
+                    "[class*='job-card']",
+                ]
+
+                found = False
+                for selector in card_selectors:
+                    try:
+                        page.wait_for_selector(selector, timeout=10000)
+                        found = True
+                        break
+                    except Exception:
                         continue
 
-                    try:
-                        page.wait_for_selector(
-                            "a[href*='/company/'], div[class*='job'], li[class*='job'], article[class*='job']",
-                            timeout=15000,
-                        )
-                    except Exception:
-                        logger.warning(f"Wellfound PW: no jobs for {role} page {page_num}")
-                        break
+                if not found:
+                    logger.warning(f"Wellfound PW: no jobs on {url}")
+                    continue
 
-                    page.wait_for_timeout(2000)
+                page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                page.wait_for_timeout(2000)
 
-                    html = page.content()
-                    items = self._parse_listing_page(html, role)
+                html = page.content()
+                # Generic /jobs search: no role context, so don't invent a role tag.
+                items = self._parse_listing_page(html, "")
 
-                    for item in items:
-                        if item["link"] not in seen_urls:
-                            seen_urls.add(item["link"])
-                            all_items.append(item)
+                for item in items:
+                    if item["link"] not in seen_urls:
+                        seen_urls.add(item["link"])
+                        all_items.append(item)
 
-                    logger.info(f"Wellfound PW: {role} page {page_num} -> {len(items)} items")
-                    if not items:
-                        break
+                logger.info(f"Wellfound PW: 1 page -> {len(items)} items")
 
-                except ScrapeBlockedError:
-                    raise
-                except Exception as e:
-                    logger.warning(f"Wellfound PW error {role} page {page_num}: {e}")
-                    break
+            except ScrapeBlockedError:
+                raise
+            except Exception as e:
+                logger.warning(f"Wellfound PW error: {e}")
 
         logger.info(f"Wellfound: {len(all_items)} total lateral items")
         self._log_sample_links(all_items)
@@ -165,6 +127,8 @@ class WellfoundScraper(GenericScraper):
         for script in jsonld_scripts:
             try:
                 data = json.loads(script.string or script.get_text())
+                if isinstance(data, dict):
+                    data = data.get("@graph") or [data]
                 if isinstance(data, list):
                     items = []
                     for entry in data:
@@ -174,14 +138,19 @@ class WellfoundScraper(GenericScraper):
                                 if parsed:
                                     items.append(parsed)
                     if items:
-                        return items
+                        return self._dedupe_by_link(items)
             except (json.JSONDecodeError, TypeError):
                 continue
 
         cards = soup.select(
             "a[href*='/company/'], div[class*='styles_jobCard'], "
-            "li[class*='job-card'], article[class*='job'], div[class*='job-listing']"
+            "li[class*='job-card'], article[class*='job'], div[class*='job-listing'], "
+            "div[class*='card'], div[class*='jobCard'], "
+            "a[href*='/startup/'], section[class*='job'], "
+            "div[class*='listing']"
         )
+        if not cards:
+            cards = soup.select("[class*='job']:not(script):not(style), [class*='card']:not(script):not(style)")
         items = []
         for card in cards:
             try:
@@ -191,10 +160,13 @@ class WellfoundScraper(GenericScraper):
             except Exception as exc:
                 logger.debug(f"Wellfound card parse error: {exc}")
 
-        return items
+        return self._dedupe_by_link(items)
 
     def _parse_jsonld_item(self, item: dict, role: str) -> dict | None:
-        job = item if isinstance(item, dict) else item.get("item", {})
+        if not isinstance(item, dict):
+            return None
+        # ItemList entries are usually ListItem wrappers: {"@type": "ListItem", "item": {...}}
+        job = item["item"] if isinstance(item.get("item"), dict) else item
         title = job.get("name") or job.get("title") or ""
         if not title:
             return None
@@ -217,7 +189,8 @@ class WellfoundScraper(GenericScraper):
 
         description = job.get("description", "")
         if description:
-            description = re.sub(r"<[^>]+>", " ", description)[:2000]
+            description = re.sub(r"<[^>]+>", " ", description)
+            description = re.sub(r"\s+", " ", description).strip()[:2000]
 
         salary = ""
         salary_data = job.get("baseSalary", {})
@@ -233,7 +206,7 @@ class WellfoundScraper(GenericScraper):
                 elif max_sal:
                     salary = f"${max_sal:,.0f}/year"
 
-        tags = [role.replace("-", " ").title()]
+        tags = [role.replace("-", " ").title()] if role else []
         if job.get("employmentType"):
             tags.append(job["employmentType"])
 
@@ -264,7 +237,8 @@ class WellfoundScraper(GenericScraper):
     def _parse_card(self, card, role: str) -> dict | None:
         title_el = card.select_one(
             "h2, h3, h4, [class*='title'], [class*='jobTitle'], [class*='position'], "
-            "a[href*='/company/'] strong, a[href*='/role/']"
+            "a[href*='/company/'] strong, a[href*='/role/'], "
+            "[class*='name'], a[class*='link']"
         )
         title = title_el.get_text(strip=True) if title_el else ""
         if not title:
@@ -273,7 +247,7 @@ class WellfoundScraper(GenericScraper):
             return None
 
         href = ""
-        link_tag = card if card.name == "a" else card.select_one("a[href*='/company/'], a[href*='/role/']")
+        link_tag = card if card.name == "a" else card.select_one("a[href*='/company/'], a[href*='/role/'], a[href*='/startup/'], a[href]")
         if link_tag:
             href = link_tag.get("href", "")
         if not href:
@@ -282,35 +256,41 @@ class WellfoundScraper(GenericScraper):
 
         company_el = card.select_one(
             "span[class*='company'], [class*='employer'], [class*='org-name'], "
-            "a[class*='company'], div[class*='company']"
+            "a[class*='company'], div[class*='company'], "
+            "[class*='startup'], [class*='org']"
         )
         company = company_el.get_text(strip=True) if company_el else ""
 
         location_el = card.select_one(
-            "span[class*='location'], span[class*='loc'], div[class*='location']"
+            "span[class*='location'], span[class*='loc'], div[class*='location'], "
+            "[class*='Location'], [class*='loc']"
         )
         location = location_el.get_text(strip=True) if location_el else ""
 
-        salary_el = card.select_one(
-            "span[class*='salary'], span[class*='pay'], span[class*='comp'], "
-            "[class*='compensation'], [class*='equity']"
+        # Priority order matters: a bare [class*='comp'] also matches "companyName".
+        salary_el = self._select_first(
+            card,
+            "[class*='compensation'], [class*='salary']",
+            "span[class*='pay'], [class*='price'], [class*='amount']",
+            "[class*='equity']",
         )
         salary = salary_el.get_text(strip=True) if salary_el else ""
 
         tags_els = card.select(
             "span[class*='skill'], span[class*='tag'], [class*='badge'], "
-            "span[class*='tech-stack'] span"
+            "span[class*='tech-stack'] span, [class*='tech'], [class*='tool']"
         )
         tags = [s.get_text(strip=True) for s in tags_els if s.get_text(strip=True)]
         if not tags:
-            tags = [role.replace("-", " ").title()]
+            tags = [role.replace("-", " ").title()] if role else []
 
         desc_el = card.select_one(
-            "p[class*='description'], div[class*='desc'], [class*='snippet']"
+            "p[class*='description'], div[class*='desc'], [class*='snippet'], "
+            "[class*='summary'], [class*='blurb']"
         )
         description = desc_el.get_text(strip=True)[:500] if desc_el else ""
 
-        equity_el = card.select_one("span[class*='equity'], [class*='stock']")
+        equity_el = card.select_one("span[class*='equity'], [class*='stock'], [class*='equity']")
         if equity_el and salary:
             salary += f" + {equity_el.get_text(strip=True)}"
 
@@ -318,7 +298,7 @@ class WellfoundScraper(GenericScraper):
 
         difficulty = self._resolve_experience_level(exp_min, exp_max, title, tags)
 
-        img_el = card.select_one("img[src*='logo'], img[class*='logo']")
+        img_el = card.select_one("img[src*='logo'], img[class*='logo'], img[src*='avatar']")
         image_url = img_el.get("src", "") if img_el else ""
 
         return {

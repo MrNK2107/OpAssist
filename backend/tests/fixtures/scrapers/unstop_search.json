@@ -1,0 +1,15 @@
+{"data": {"total": 4, "data": [
+  {"id": 1, "title": "CodeSprint 2099", "seo_url": "https://unstop.com/hackathons/codesprint-2099-1", "region": "online",
+   "regnRequirements": {"start_regn_dt": "2099-01-01T00:00:00Z", "end_regn_dt": "2099-12-31T23:59:00+05:30"},
+   "organisation": {"name": "IIT Example"}, "tags": [{"name": "AI"}, "Web"], "workfunction": [{"name": "Engineering"}],
+   "required_skills": [{"skill": "Python"}],
+   "prizes": [{"rank": "Winner", "cash": 50000}, {"rank": "Runner-up", "cash": 25000, "others": "Goodies"}],
+   "details": "<p>Build   something <b>cool</b>.</p>"},
+  {"id": 2, "title": "Old Hackathon", "seo_url": "https://unstop.com/hackathons/old-2", "region": "online",
+   "regnRequirements": {"end_regn_dt": "2001-01-01T00:00:00Z"}},
+  {"id": 3, "title": "   ", "seo_url": "https://unstop.com/x"},
+  {"id": 4, "title": "Campus Hack", "public_url": "hackathons/campus-hack-4", "region": "offline",
+   "locations": [{"name": "Delhi"}], "address_with_country_logo": {"country": "India"},
+   "end_date": "2099-06-30T00:00:00Z",
+   "prizes": [{"others": "Trophies and goodies for all finalists. "}]}
+]}}

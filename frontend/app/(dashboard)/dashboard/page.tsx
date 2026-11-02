@@ -102,7 +102,7 @@ export default function DashboardPage() {
       <motion.div variants={item}>
         <div className="flex items-center gap-3 mb-1">
           <h1 className="text-2xl md:text-3xl font-bold">Welcome back!</h1>
-          <Sparkles className="h-5 w-5 text-cyan-400" />
+          <Sparkles className="h-5 w-5 text-amber-600 dark:text-amber-400" />
         </div>
         <p className="text-muted-foreground">Here&apos;s what&apos;s happening with your opportunities</p>
       </motion.div>
@@ -117,10 +117,10 @@ export default function DashboardPage() {
       {/* Vertical Stats */}
       <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link href="/opportunities?type=hackathon">
-          <Card className="group hover:border-cyan-500/30 transition-all cursor-pointer">
+          <Card className="group hover:border-amber-500/30 transition-all cursor-pointer">
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-2 rounded-lg bg-cyan-500/10">
-                <Code className="h-5 w-5 text-cyan-400" />
+              <div className="p-2 rounded-lg bg-amber-500/10">
+                <Code className="h-5 w-5 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
                 <p className="text-2xl font-bold tabular-nums">{verticalCounts.hackathon}</p>
@@ -130,10 +130,10 @@ export default function DashboardPage() {
           </Card>
         </Link>
         <Link href="/opportunities?type=internship">
-          <Card className="group hover:border-violet-500/30 transition-all cursor-pointer">
+          <Card className="group hover:border-orange-500/30 transition-all cursor-pointer">
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="p-2 rounded-lg bg-violet-500/10">
-                <GraduationCap className="h-5 w-5 text-violet-400" />
+              <div className="p-2 rounded-lg bg-orange-500/10">
+                <GraduationCap className="h-5 w-5 text-teal-700 dark:text-teal-400" />
               </div>
               <div>
                 <p className="text-2xl font-bold tabular-nums">{verticalCounts.internship}</p>
@@ -191,7 +191,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
-                <Clock className="h-5 w-5 text-cyan-400" />
+                <Clock className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                 Upcoming Deadlines
               </CardTitle>
             </CardHeader>
@@ -202,7 +202,7 @@ export default function DashboardPage() {
                   return (
                     <div key={opp.id} className="py-3 flex items-center justify-between group">
                       <div>
-                        <Link href={`/opportunities/${opp.id}`} className="font-medium hover:text-cyan-400 transition-colors">
+                        <Link href={`/opportunities/${opp.id}`} className="font-medium hover:text-amber-400 transition-colors">
                           {opp.title}
                         </Link>
                         <p className="text-sm text-muted-foreground">{formatDate(opp.deadline!)}</p>

@@ -34,6 +34,10 @@ export async function apiFetch<T>(endpoint: string, options: RequestOptions = {}
     throw new Error(error.detail || `API error: ${response.status}`)
   }
 
+  if (response.status === 204) {
+    return undefined as T
+  }
+
   return response.json()
 }
 

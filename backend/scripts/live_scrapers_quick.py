@@ -3,6 +3,9 @@
 import json
 import logging
 import sys
+from pathlib import Path as _Path
+
+sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))  # backend/ on path
 import time
 from datetime import datetime, timezone
 

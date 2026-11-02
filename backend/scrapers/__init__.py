@@ -144,6 +144,11 @@ register_scraper("indeed_internships", SourceConfig(
     interval_hours=12, max_pages=3, requires_playwright=True,
     description="Indeed India internships",
 ))
+register_scraper("glassdoor_internships", SourceConfig(
+    name="GlassdoorInternships", verticals=["internship"], priority="medium",
+    interval_hours=12, max_pages=3, requires_playwright=True, status="unstable",
+    description="Glassdoor India internships (DOM changes frequently)",
+))
 
 # -- Jobs --
 register_scraper("internshala_jobs", SourceConfig(
@@ -209,12 +214,22 @@ register_scraper("skill_india", SourceConfig(
     name="SkillIndia", verticals=["job", "internship"], priority="low",
     interval_hours=24, max_pages=3, description="Skill India Portal listings",
 ))
+register_scraper("naukri", SourceConfig(
+    name="Naukri", verticals=["job"], priority="medium",
+    interval_hours=12, max_pages=3, requires_playwright=True,
+    description="Naukri fresher jobs (Playwright stealth)",
+))
 
 # -- Lateral / experienced jobs --
 register_scraper("cutshort", SourceConfig(
     name="CutShort", verticals=["job_lateral"], priority="high",
     interval_hours=6, max_pages=3, requires_playwright=True,
     description="CutShort startup lateral roles (2-10yr) with API intercept",
+))
+register_scraper("wellfound", SourceConfig(
+    name="Wellfound", verticals=["job_lateral"], priority="low",
+    interval_hours=24, max_pages=1, requires_playwright=True, status="unstable",
+    description="Wellfound/AngelList startup jobs (Playwright, site frequently restructures)",
 ))
 
 # -- Scholarships & Fellowships --

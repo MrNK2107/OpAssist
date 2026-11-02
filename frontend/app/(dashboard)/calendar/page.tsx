@@ -3,11 +3,9 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import { api } from '@/lib/api'
-import { formatDate } from '@/lib/utils'
 
 interface Opportunity {
   id: string

@@ -10,7 +10,7 @@ if not exist backend\.env (
 )
 
 if not exist frontend\.env.local (
-    echo ERROR: frontend\.env.local is missing. Copy frontend\.env.local.example and fill in your values.
+    echo ERROR: frontend\.env.local is missing. Copy frontend\.env.example and fill in your values.
     exit /b 1
 )
 

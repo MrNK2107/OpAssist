@@ -1,5 +1,5 @@
-import { initializeApp, getApps } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
+import { initializeApp, getApps, type FirebaseApp } from 'firebase/app'
+import { getAuth, type Auth } from 'firebase/auth'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,7 +10,32 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 }
 
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
-const auth = getAuth(app)
+/**
+ * True when the public Firebase web config is present. Without it the app
+ * still builds and the public pages (landing, Radar) work; sign-in shows a
+ * clear "not configured" message instead of crashing at import time.
+ */
+export const firebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId)
 
-export { app, auth }
+export const FIREBASE_NOT_CONFIGURED =
+  'Sign-in is not configured on this deployment. Set the NEXT_PUBLIC_FIREBASE_* variables (see frontend/.env.example).'
+
+let cachedAuth: Auth | null = null
+
+export function getFirebaseApp(): FirebaseApp {
+  if (!firebaseConfigured) throw new Error(FIREBASE_NOT_CONFIGURED)
+  return getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0]
+}
+
+/** Lazily created Auth instance; throws a readable error when not configured. */
+export function getFirebaseAuth(): Auth {
+  if (!cachedAuth) cachedAuth = getAuth(getFirebaseApp())
+  return cachedAuth
+}
+
+/** Minimal view used by the API client: the signed-in user, or null. */
+export const auth = {
+  get currentUser() {
+    return firebaseConfigured ? getFirebaseAuth().currentUser : null
+  },
+}

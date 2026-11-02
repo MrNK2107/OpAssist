@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
-  ArrowLeft, Bookmark, Calendar, MapPin, Trophy, ExternalLink, Briefcase, Plus, Sparkles, AlertCircle
+  ArrowLeft, Bookmark, Calendar, MapPin, Trophy, ExternalLink, Briefcase, Plus, Sparkles
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { formatDate, daysUntil } from '@/lib/utils'

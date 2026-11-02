@@ -8,8 +8,9 @@ import { api } from '@/lib/api'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Rocket, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { UniversitySelect } from '@/components/ui/university-select'
+import { RadarMark } from '@/components/brand/radar-mark'
 
 function SignupForm() {
   const [name, setName] = useState('')
@@ -46,7 +47,7 @@ function SignupForm() {
     setError('')
 
     try {
-      const user = await signUp(email, password)
+      await signUp(email, password)
 
       // Create profile via backend API
       await api.put('/api/profile', {
@@ -65,15 +66,13 @@ function SignupForm() {
   return (
     <Card className="w-full max-w-md animate-fade-in-up">
       {/* Gradient top bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-violet-500 to-pink-500 rounded-t-xl" />
+      <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 rounded-t-xl" />
 
       <CardHeader className="text-center">
         <div className="flex justify-center mb-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-            <Rocket className="h-6 w-6 text-white" />
-          </div>
+          <RadarMark className="w-12 h-12" />
         </div>
-        <CardTitle className="text-2xl">Join OpAssist</CardTitle>
+        <CardTitle as="h1" className="text-2xl">Join OpAssist</CardTitle>
         <CardDescription>Create your account to discover opportunities</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -166,7 +165,7 @@ function SignupForm() {
 
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{' '}
-            <Link href="/login" className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium">
+            <Link href="/login" className="text-amber-600 dark:text-amber-400 hover:text-amber-300 transition-colors font-medium">
               Sign in
             </Link>
           </p>

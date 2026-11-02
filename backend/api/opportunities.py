@@ -4,7 +4,59 @@ from models.schemas import Opportunity
 from database.supabase_client import db
 from api.deps import get_current_user_id
 
+import time
+
+from models.schemas import OpportunityType
+
 router = APIRouter()
+
+# Public landing-page counts are cheap to cache: they change only when a
+# scrape lands, and every anonymous visitor would otherwise cost one count
+# query per type.
+STATS_TTL_SECONDS = 60
+_stats_cache: dict = {"at": 0.0, "value": None}
+
+
+def _reset_stats_cache() -> None:
+    _stats_cache["at"] = 0.0
+    _stats_cache["value"] = None
+
+
+@router.get("/stats")
+async def get_opportunity_stats() -> dict:
+    """Public per-type opportunity counts for the landing page.
+
+    Returns ``{"by_type": {type: count}, "total": int, "available": bool}``.
+    ``available`` is False when the database is not configured or a query
+    fails, so the frontend can fall back to its static numbers.
+    """
+    now = time.monotonic()
+    cached = _stats_cache["value"]
+    if cached is not None and now - _stats_cache["at"] < STATS_TTL_SECONDS:
+        return cached
+
+    types = [t.value for t in OpportunityType]
+    empty = {"by_type": {t: 0 for t in types}, "total": 0, "available": False}
+    if not db.client:
+        return empty
+
+    by_type: dict[str, int] = {}
+    try:
+        for t in types:
+            result = (
+                db.client.table("opportunities")
+                .select("id", count="exact", head=True)
+                .eq("type", t)
+                .execute()
+            )
+            by_type[t] = int(result.count or 0)
+    except Exception:
+        return empty
+
+    value = {"by_type": by_type, "total": sum(by_type.values()), "available": True}
+    _stats_cache["at"] = now
+    _stats_cache["value"] = value
+    return value
 
 
 @router.get("")

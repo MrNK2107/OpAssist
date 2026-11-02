@@ -191,12 +191,12 @@ export default function EditProfilePage() {
 
       {/* Basic Info */}
       <Card className="overflow-hidden">
-        <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-violet-500 to-pink-500" />
+        <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500" />
         <CardContent className="p-6 space-y-6">
           {/* Avatar + Name row */}
           <div className="flex items-center gap-4">
             <div className="relative shrink-0">
-              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-cyan-500/20 to-violet-500/20 border border-border flex items-center justify-center">
+              <div className="h-16 w-16 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-border flex items-center justify-center">
                 <User className="h-8 w-8 text-muted-foreground" />
               </div>
             </div>
@@ -373,7 +373,7 @@ export default function EditProfilePage() {
           {interests.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
               {interests.map((i) => (
-                <Badge key={i} className="gap-1.5 py-1 pl-2.5 pr-1.5 text-xs bg-gradient-to-r from-cyan-500/10 to-violet-500/10 text-cyan-400 border-transparent">
+                <Badge key={i} className="gap-1.5 py-1 pl-2.5 pr-1.5 text-xs bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 dark:text-amber-400 border-transparent">
                   {i}
                   <button
                     onClick={() => removeInterest(i)}

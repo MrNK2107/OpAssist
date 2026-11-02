@@ -9,7 +9,16 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ['var(--font-display)', 'ui-sans-serif', 'system-ui'],
+        mono: ['var(--font-mono)', 'ui-monospace', 'monospace'],
+      },
       colors: {
+        ink: 'hsl(var(--ink))',
+        paper: 'hsl(var(--paper))',
+        marigold: 'hsl(var(--marigold))',
+        fit: 'hsl(var(--fit))',
+        urgent: 'hsl(var(--urgent))',
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

@@ -3,8 +3,17 @@
   "name": "OpAssist - Opportunity Saver",
   "version": "1.0.0",
   "description": "Save hackathons, internships, and opportunities from the web to your OpAssist dashboard.",
-  "permissions": ["activeTab", "storage"],
-  "host_permissions": ["https://devfolio.co/*", "https://unstop.com/*", "https://www.hackerearth.com/*"],
+  "permissions": [
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "https://devfolio.co/*",
+    "https://unstop.com/*",
+    "https://www.hackerearth.com/*",
+    "http://localhost:8000/*",
+    "http://127.0.0.1:8000/*"
+  ],
   "action": {
     "default_popup": "popup/popup.html",
     "default_title": "OpAssist"
@@ -16,8 +25,12 @@
         "https://unstop.com/*",
         "https://www.hackerearth.com/*"
       ],
-      "js": ["content/content.js"],
-      "css": ["content/content.css"]
+      "js": [
+        "content/content.js"
+      ],
+      "css": [
+        "content/content.css"
+      ]
     }
   ],
   "background": {

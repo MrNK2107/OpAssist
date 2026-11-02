@@ -29,20 +29,17 @@ export default function NotificationsPage() {
   const [loading, setLoading] = useState(true)
   const [unreadCount, setUnreadCount] = useState(0)
 
-  const fetchNotifications = async () => {
-    try {
-      const data = await api.get<{ data: Notification[]; unread_count: number }>('/api/notifications')
-      setNotifications(data.data || [])
-      setUnreadCount(data.unread_count || 0)
-    } catch {
-      // silent
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    fetchNotifications()
+    api
+      .get<{ data: Notification[]; unread_count: number }>('/api/notifications')
+      .then((data) => {
+        setNotifications(data.data || [])
+        setUnreadCount(data.unread_count || 0)
+      })
+      .catch(() => {
+        // silent
+      })
+      .finally(() => setLoading(false))
   }, [])
 
   const handleMarkRead = async (id: string) => {

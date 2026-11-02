@@ -12,7 +12,7 @@ if [ ! -f backend/.env ]; then
 fi
 
 if [ ! -f frontend/.env.local ]; then
-    echo "ERROR: frontend/.env.local is missing. Copy frontend/.env.local.example and fill in your values."
+    echo "ERROR: frontend/.env.local is missing. Copy frontend/.env.example and fill in your values."
     exit 1
 fi
 

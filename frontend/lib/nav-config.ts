@@ -7,10 +7,12 @@ import {
   Users,
   Trophy,
   Bell,
+  Radar,
 } from 'lucide-react'
 
 export const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/radar', label: 'Radar', icon: Radar },
   { href: '/opportunities', label: 'Discover', icon: Compass },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
   { href: '/applications', label: 'Applications', icon: Briefcase },

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { auth } from '@/lib/firebase'
+import { firebaseConfigured, getFirebaseAuth } from '@/lib/firebase'
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -31,7 +31,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signIn: async (email, password) => {
     set({ error: null })
     try {
-      await signInWithEmailAndPassword(auth, email, password)
+      await signInWithEmailAndPassword(getFirebaseAuth(), email, password)
       document.cookie = 'firebase-auth=true; path=/; max-age=86400; SameSite=Lax'
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to sign in'
@@ -43,7 +43,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   signUp: async (email, password) => {
     set({ error: null })
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, password)
+      const { user } = await createUserWithEmailAndPassword(getFirebaseAuth(), email, password)
       document.cookie = 'firebase-auth=true; path=/; max-age=86400; SameSite=Lax'
       return user
     } catch (err) {
@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ error: null })
     try {
       const provider = new GoogleAuthProvider()
-      const { user } = await signInWithPopup(auth, provider)
+      const { user } = await signInWithPopup(getFirebaseAuth(), provider)
       document.cookie = 'firebase-auth=true; path=/; max-age=86400; SameSite=Lax'
       return user
     } catch (err) {
@@ -69,7 +69,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   signOut: async () => {
     try {
-      await firebaseSignOut(auth)
+      await firebaseSignOut(getFirebaseAuth())
       set({ user: null, error: null })
     } catch (err) {
       set({ error: err instanceof Error ? err.message : 'Failed to sign out' })
@@ -82,7 +82,13 @@ export const useAuthStore = create<AuthState>((set) => ({
       unsubscribe()
     }
 
-    unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (!firebaseConfigured) {
+      // Public deployment without auth: behave as signed out.
+      set({ user: null, loading: false, error: null })
+      return
+    }
+
+    unsubscribe = onAuthStateChanged(getFirebaseAuth(), (user) => {
       // Set cookie for middleware route protection
       if (user) {
         document.cookie = 'firebase-auth=true; path=/; max-age=86400; SameSite=Lax'

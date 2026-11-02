@@ -261,7 +261,57 @@ class GenericScraper(ABC):
     def _sanitize_prize(self, prize: str) -> str:
         if not prize:
             return prize
-        return prize.replace("\u20b9", "Rs.").replace("\u20a8", "Rs.")
+        prize = prize.replace("\u20b9", "Rs.").replace("\u20a8", "Rs.")
+        if len(prize) > 500:
+            prize = prize[:497] + "..."
+        return prize
+
+    @staticmethod
+    def _dedupe_by_link(items: List[dict]) -> List[dict]:
+        """Drop items whose link was already seen (keeps first occurrence).
+
+        Broad fallback selectors (e.g. ``div[class*='job']``) match both a card
+        and its nested wrappers, which would otherwise yield duplicate items.
+        """
+        seen: set = set()
+        out: List[dict] = []
+        for item in items:
+            link = item.get("link")
+            if not link or link in seen:
+                continue
+            seen.add(link)
+            out.append(item)
+        return out
+
+    @staticmethod
+    def _select_first(card, *selectors: str):
+        """Return the first element matching the selectors *in priority order*.
+
+        ``card.select_one("a, b")`` returns whichever matches first in document
+        order, so a broad fallback selector can beat a precise one.
+        """
+        for sel in selectors:
+            el = card.select_one(sel)
+            if el is not None:
+                return el
+        return None
+
+    @staticmethod
+    def _leaf_texts(elements) -> List[str]:
+        """Unique, non-empty texts of matched elements that do not contain other matches.
+
+        Broad selectors like ``[class*='tag']`` match a tag container *and* its
+        children; taking the container text would concatenate tags ("PythonSQL").
+        """
+        ids = {id(e) for e in elements}
+        texts: List[str] = []
+        for el in elements:
+            if any(id(d) in ids for d in el.find_all(True)):
+                continue
+            text = el.get_text(strip=True)
+            if text and text not in texts:
+                texts.append(text)
+        return texts
 
     def _log_sample_links(self, items: List[dict]) -> None:
         sample_links = [item.get("link") for item in items[:3] if item.get("link")]

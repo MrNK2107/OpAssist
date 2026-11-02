@@ -10,7 +10,7 @@ describe('Badge', () => {
 
   it('renders with default variant', () => {
     render(<Badge>Default</Badge>)
-    expect(screen.getByText('Default').className).toContain('from-cyan-500')
+    expect(screen.getByText('Default').className).toContain('bg-primary/15')
   })
 
   it('renders with secondary variant', () => {

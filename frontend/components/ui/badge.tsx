@@ -8,7 +8,7 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          'border-transparent bg-gradient-to-r from-cyan-500/20 to-violet-500/20 text-cyan-400 shadow-sm',
+          'border-transparent bg-primary/15 text-amber-700 dark:text-amber-300',
         secondary:
           'border-transparent bg-secondary/80 backdrop-blur-sm text-secondary-foreground',
         destructive:
@@ -19,6 +19,8 @@ const badgeVariants = cva(
           'border-transparent bg-success/20 backdrop-blur-sm text-success',
         warning:
           'border-transparent bg-warning/20 backdrop-blur-sm text-warning',
+        ghost:
+          'border-transparent bg-transparent hover:bg-secondary/60',
       },
     },
     defaultVariants: {

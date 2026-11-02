@@ -25,6 +25,7 @@ class GlassdoorInternshipsScraper(GenericScraper):
 
     BASE_URL = "https://www.glassdoor.co.in"
     LISTING_URL = f"{BASE_URL}/Internship/jobs-SRCH_KO0,10.htm"
+    ALTERNATE_URL = f"{BASE_URL}/internship-jobs-SRCH_KO0,10.htm"
     MAX_PAGES = 3
 
     # ------------------------------------------------------------------
@@ -90,6 +91,7 @@ class GlassdoorInternshipsScraper(GenericScraper):
             Object.defineProperty(navigator, 'webdriver', { get: () => false });
             Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3,4,5] });
             Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+            Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
             window.chrome = { runtime: {} };
         """)
 
@@ -100,45 +102,66 @@ class GlassdoorInternshipsScraper(GenericScraper):
 
         all_items: list[dict] = []
         seen_urls: set[str] = set()
+        urls_to_try = [self.LISTING_URL, self.ALTERNATE_URL]
 
-        for page_num in range(1, self.MAX_PAGES + 1):
-            url = self.LISTING_URL if page_num == 1 else f"{self.LISTING_URL}?p={page_num}"
-            logger.info(f"Glassdoor (Playwright): fetching {url}")
-
-            try:
-                page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        for base_url in urls_to_try:
+            for page_num in range(1, self.MAX_PAGES + 1):
+                url = base_url if page_num == 1 else f"{base_url}?p={page_num}"
+                logger.info(f"Glassdoor (Playwright): fetching {url}")
 
                 try:
-                    page.wait_for_selector(
-                        "li[data-test='job-list-item'], div[id*='JobCard'], article[data-test*='job']",
-                        timeout=20000,
-                    )
-                except Exception:
-                    logger.warning(f"Glassdoor (Playwright): no job cards on {url}")
+                    page.goto(url, wait_until="domcontentloaded", timeout=60000)
+                    page.wait_for_timeout(5000)
+
+                    card_selectors = [
+                        "li[data-test='job-list-item']",
+                        "div[id*='JobCard']",
+                        "article[data-test*='job']",
+                        "div[class*='jobListing']",
+                        "div[class*='jobCard']",
+                        "li[class*='job']",
+                        "div[data-testid='job-card']",
+                        "div[class*='job-container']",
+                        ".react-job-listing",
+                        "[data-job-id]",
+                    ]
+
+                    found_cards = False
+                    for selector in card_selectors:
+                        try:
+                            page.wait_for_selector(selector, timeout=8000)
+                            found_cards = True
+                            break
+                        except Exception:
+                            continue
+
+                    if not found_cards:
+                        logger.warning(f"Glassdoor (Playwright): no job cards on {url}")
+                        if base_url == urls_to_try[-1]:
+                            break
+                        continue
+
+                    page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                    page.wait_for_timeout(2000)
+
+                    html = page.content()
+                    items = self._parse_listing_page(html)
+
+                    for item in items:
+                        if item["link"] not in seen_urls:
+                            seen_urls.add(item["link"])
+                            all_items.append(item)
+
+                    logger.info(f"Glassdoor (Playwright): page {page_num} -> {len(items)} items")
+
+                    if not items:
+                        break
+
+                except ScrapeBlockedError:
+                    raise
+                except Exception as e:
+                    logger.warning(f"Glassdoor (Playwright): error on page {page_num}: {e}")
                     break
-
-                page.wait_for_timeout(3000)
-
-                self._scroll_for_lazy_load(page)
-
-                html = page.content()
-                items = self._parse_listing_page(html)
-
-                for item in items:
-                    if item["link"] not in seen_urls:
-                        seen_urls.add(item["link"])
-                        all_items.append(item)
-
-                logger.info(f"Glassdoor (Playwright): page {page_num} -> {len(items)} items")
-
-                if not items:
-                    break
-
-            except ScrapeBlockedError:
-                raise
-            except Exception as e:
-                logger.warning(f"Glassdoor (Playwright): error on page {page_num}: {e}")
-                break
 
         logger.info(f"Glassdoor (Playwright): {len(all_items)} total items")
         return all_items
@@ -154,10 +177,17 @@ class GlassdoorInternshipsScraper(GenericScraper):
             "div[id*='JobCard'], "
             "article[data-test*='job'], "
             "div.jobContainer, "
-            "div[class*='jobListing']"
+            "div[class*='jobListing'], "
+            "div[class*='jobCard'], "
+            "li[class*='job'], "
+            "div[data-testid='job-card'], "
+            ".react-job-listing, "
+            "[data-job-id]"
         )
         if not cards:
-            cards = soup.select("[data-job-id], [data-id*='job']")
+            cards = soup.select("[data-job-id], [data-id*='job'], div[class*='listing']")
+        if not cards:
+            cards = soup.select("div[class*='container'] > div[class*='row'] > div[class*='col']")
 
         items: list[dict] = []
         for card in cards:
@@ -168,25 +198,34 @@ class GlassdoorInternshipsScraper(GenericScraper):
             except Exception as exc:
                 logger.debug(f"Glassdoor: failed to parse card: {exc}")
 
-        return items
+        return self._dedupe_by_link(items)
 
     def _parse_card(self, card) -> dict | None:
         title_el = card.select_one(
             "a.jobLink, "
             "a[data-test='job-link'], "
             "a[class*='jobTitle'], "
-            "a[href*='/partner/jobListing']"
+            "a[href*='/partner/jobListing'], "
+            "a[href*='job-listing'], "
+            "a[class*='title'], "
+            "h2 a, h3 a, "
+            "[data-test='job-title'], "
+            "[class*='job-title'], "
+            "a[href*='/job']"
         )
         title = title_el.get_text(strip=True) if title_el else ""
         if not title:
             title_el = card.select_one("a[href*='job-listing']")
             title = title_el.get_text(strip=True) if title_el else ""
         if not title:
+            title_el = card.select_one("a[class*='job'], a[class*='title']")
+            title = title_el.get_text(strip=True) if title_el else ""
+        if not title:
             return None
 
         href = title_el.get("href", "") if title_el else ""
         if not href:
-            link_el = card.select_one("a[href*='/job-listing']")
+            link_el = card.select_one("a[href*='/job-listing'], a[href*='/job'], a[href*='partner']")
             href = link_el.get("href", "") if link_el else ""
         if not href:
             return None
@@ -196,28 +235,36 @@ class GlassdoorInternshipsScraper(GenericScraper):
             "div.employerName, "
             "span[data-test='employer-name'], "
             "div[class*='employer'], "
-            "span[class*='company']"
+            "span[class*='company'], "
+            "[data-test='employer-name'], "
+            "div[class*='company']"
         )
         company = company_el.get_text(strip=True) if company_el else ""
 
         location_el = card.select_one(
             "span[data-test='location'], "
             "div[class*='location'], "
-            "span[class*='loc']"
+            "span[class*='loc'], "
+            "[data-test='location'], "
+            "span[class*='location']"
         )
         location = location_el.get_text(strip=True) if location_el else ""
 
         salary_el = card.select_one(
             "span[data-test='detail-salary'], "
             "span[class*='salary'], "
-            "span[class*='est']"
+            "span[class*='est'], "
+            "[data-test='detail-salary'], "
+            "span[class*='pay']"
         )
         salary = salary_el.get_text(strip=True) if salary_el else ""
 
         desc_el = card.select_one(
             "div[class*='jobDescription'], "
             "span[class*='desc'], "
-            "div[class*='snippet']"
+            "div[class*='snippet'], "
+            "[class*='description'], "
+            "[class*='job-desc']"
         )
         description = desc_el.get_text(strip=True)[:500] if desc_el else ""
 
@@ -225,7 +272,9 @@ class GlassdoorInternshipsScraper(GenericScraper):
             "span[data-test='age'], "
             "span[class*='posted'], "
             "span[class*='age'], "
-            "div[class*='time']"
+            "div[class*='time'], "
+            "[data-test='age'], "
+            "span[class*='date']"
         )
         posted_text = posted_el.get_text(strip=True) if posted_el else ""
         deadline = self._infer_deadline(posted_text)

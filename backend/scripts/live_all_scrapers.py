@@ -2,7 +2,7 @@
 import sys, time, traceback
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from scrapers import SCRAPER_REGISTRY, get_scraper_class
 from services.scraper_service import run_scraper

@@ -19,17 +19,19 @@ export function UniversitySelect({
   onChange,
   className,
   placeholder = 'Type to search...',
-  required,
 }: UniversitySelectProps) {
   const [search, setSearch] = useState(value)
+  const [prevValue, setPrevValue] = useState(value)
   const [open, setOpen] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
+  // Keep the input text in sync when the controlled value changes from outside.
+  if (value !== prevValue) {
+    setPrevValue(value)
     setSearch(value)
-  }, [value])
+  }
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -103,7 +105,9 @@ export function UniversitySelect({
           />
           {value && (
             <button
+              type="button"
               onClick={handleClear}
+              aria-label="Clear university"
               className="shrink-0 rounded p-0.5 text-muted-foreground hover:text-foreground transition-colors"
             >
               <X className="h-4 w-4" />
@@ -111,8 +115,13 @@ export function UniversitySelect({
           )}
         </div>
 
-        {open && (
-          <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg animate-fade-in overflow-hidden">
+        {/* List stays mounted (hidden when closed) so the input's aria-controls always resolves */}
+        <div
+          className={cn(
+            'absolute z-50 mt-1 w-full rounded-lg border border-border bg-card shadow-lg animate-fade-in overflow-hidden',
+            !open && 'hidden',
+          )}
+        >
             <Command.List className="max-h-60 overflow-y-auto p-1">
               {!search ? (
                 <div className="py-6 text-center text-sm text-muted-foreground">
@@ -149,8 +158,7 @@ export function UniversitySelect({
                 ))
               )}
             </Command.List>
-          </div>
-        )}
+        </div>
       </Command>
     </div>
   )

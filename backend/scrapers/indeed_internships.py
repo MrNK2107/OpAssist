@@ -15,7 +15,7 @@ class IndeedInternshipsScraper(GenericScraper):
     source_key = "indeed_internships"
     verticals = ["internship"]
     requires_playwright = True
-    BASE_URL = "https://www.indeed.com"
+    BASE_URL = "https://in.indeed.com"
     SEARCH_PATH = "/internships?l=India"
     MAX_PAGES = 3
 
@@ -56,6 +56,7 @@ class IndeedInternshipsScraper(GenericScraper):
             Object.defineProperty(navigator, 'webdriver', { get: () => false });
             Object.defineProperty(navigator, 'plugins', { get: () => [1,2,3,4,5] });
             Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+            Object.defineProperty(navigator, 'platform', { get: () => 'Win32' });
             window.chrome = { runtime: {} };
         """)
 
@@ -153,7 +154,7 @@ class IndeedInternshipsScraper(GenericScraper):
     def _parse_listing_page(self, html_text: str) -> list[dict]:
         soup = BeautifulSoup(html_text, "html.parser")
         cards = soup.select(
-            "[data-testid='job-card'], .job_seen_beacon, li.css-1ac2h1w, div.cardOutline, div.job_card"
+            "[data-testid='job-card'], .job_seen_beacon, li.css-1ac2h1w, div.cardOutline, div.job_card, div[id*='job_card']"
         )
 
         items: list[dict] = []
@@ -165,23 +166,27 @@ class IndeedInternshipsScraper(GenericScraper):
             except Exception as exc:
                 logger.debug(f"IndeedInternships: failed to parse card: {exc}")
 
-        return items
+        return self._dedupe_by_link(items)
 
     def _parse_card(self, card) -> dict | None:
         title_el = card.select_one(
             "h2.jobTitle a, a.jcs-JobTitle, span[id^='jobTitle'] a, "
-            "a[data-testid='job-title'], a[id*='jobTitle']"
+            "a[data-testid='job-title'], a[id*='jobTitle'], "
+            "a[id^='jobTitle_'], span[class*='jobTitle'] a"
         )
         title = title_el.get_text(strip=True) if title_el else ""
         if not title:
             el = card.select_one("a[data-jk]")
             title = el.get_text(strip=True) if el else ""
         if not title:
+            el = card.select_one("a[class*='title']")
+            title = el.get_text(strip=True) if el else ""
+        if not title:
             return None
 
         href = title_el.get("href", "") if title_el else ""
         if not href:
-            el = card.select_one("a[href*='rc/clk'], a[href*='jobView']")
+            el = card.select_one("a[href*='rc/clk'], a[href*='jobView'], a[data-jk]")
             href = el.get("href", "") if el else ""
         if not href:
             return None
@@ -189,38 +194,45 @@ class IndeedInternshipsScraper(GenericScraper):
 
         company_el = card.select_one(
             "span.companyName, [data-testid='company-name'], "
-            "span.company, a[data-testid='company-name']"
+            "span.company, a[data-testid='company-name'], "
+            "span[class*='company'], div[data-testid='company-name']"
         )
         company = company_el.get_text(strip=True) if company_el else ""
 
-        location_el = card.select_one(
-            "div.companyLocation, [data-testid='text-location'], "
-            "span.location, div.location"
+        location_el = self._select_first(
+            card,
+            "[data-testid='text-location']",
+            "div.companyLocation",
+            "span.location, div.location",
+            "div[class*='location']:not(.company_location)",
         )
         location = location_el.get_text(strip=True) if location_el else ""
 
         salary_el = card.select_one(
             "div.salary-snippet-container, span.estimated-salary, "
             "div.salaryOnly, [data-testid='test-salary'], "
-            "span[id*='salary'], div.salary"
+            "span[id*='salary'], div.salary, div.metadata"
         )
         salary_text = salary_el.get_text(strip=True) if salary_el else ""
 
-        desc_el = card.select_one(
-            "div.job-snippet, ul.jobCardShelfContainer, "
-            "div.jobCardShelfContainer, [data-testid='job-snippet']"
+        desc_el = self._select_first(
+            card,
+            "[data-testid='job-snippet'], div.job-snippet",
+            "ul.jobCardShelfContainer, div.jobCardShelfContainer",
+            "div[class*='snippet']:not([class*='salary']), div[class*='summary']",
         )
         description = desc_el.get_text(strip=True)[:500] if desc_el else ""
 
-        tags = []
-        for s in card.select("ul li, .tag, .skill"):
-            text = s.get_text(strip=True)
-            if text and text.lower() not in ("internship", "intern"):
-                tags.append(text)
+        tags = [
+            text
+            for text in self._leaf_texts(card.select(".tag, .skill, [class*='tag']"))
+            if text.lower() not in ("internship", "intern")
+        ]
 
         posted_el = card.select_one(
             "span.date, span[data-testid='job-date'], "
-            "span.css-1c0e2o8, .jobCardFooter span"
+            "span.css-1c0e2o8, .jobCardFooter span, "
+            "span[class*='date'], span[class*='posted']"
         )
         posted_text = posted_el.get_text(strip=True) if posted_el else ""
 

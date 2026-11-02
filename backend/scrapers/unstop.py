@@ -8,7 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 class UnstopScraper(GenericScraper):
-    """Unstop scraper — hackathons, internships, scholarships."""
+    """Unstop scraper — hackathons and internships.
+
+    Scholarships are intentionally not fetched: they polluted the hackathon
+    vertical (SCRAPER_AUDIT_REPORT.md, critical issue #1). Buddy4Study covers them.
+    """
 
     platform_name = "Unstop"
     source_key = "unstop"
@@ -18,7 +22,6 @@ class UnstopScraper(GenericScraper):
     OPPORTUNITY_TYPES = {
         "hackathons": "hackathon",
         "internships": "internship",
-        "scholarships": "scholarship",
     }
 
     def scrape(self, client: httpx.Client) -> list[dict]:

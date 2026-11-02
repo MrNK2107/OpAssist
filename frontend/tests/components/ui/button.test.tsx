@@ -12,7 +12,7 @@ describe('Button', () => {
   it('renders with default variant class', () => {
     render(<Button>Default</Button>)
     const button = screen.getByRole('button')
-    expect(button.className).toContain('bg-gradient-to-br')
+    expect(button.className).toContain('bg-primary')
   })
 
   it('renders with outline variant', () => {
@@ -30,7 +30,7 @@ describe('Button', () => {
   it('renders with ghost variant', () => {
     render(<Button variant="ghost">Ghost</Button>)
     const button = screen.getByRole('button')
-    expect(button.className).toContain('hover:bg-accent')
+    expect(button.className).toContain('hover:bg-secondary')
   })
 
   it('renders with link variant', () => {

@@ -12,7 +12,7 @@
 - `frontend/lib/api.ts` — API client with auth headers
 - `frontend/lib/utils.ts` — cn(), formatDate, daysUntil helpers
 - `backend/.env.example` — config template
-- `frontend/.env.local.example` — frontend config template
+- `frontend/.env.example` — frontend config template
 - `.env.example` — consolidated env var documentation
 - `supabase/migrations/001_create_tables.sql` — all 7 tables + enums
 - `supabase/migrations/002_rls_policies.sql` — Row Level Security

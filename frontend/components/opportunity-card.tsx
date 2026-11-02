@@ -22,8 +22,8 @@ interface OpportunityCardProps {
 }
 
 const typeColors: Record<string, { gradient: string; border: string; text: string }> = {
-  hackathon: { gradient: 'from-cyan-500/20 to-blue-500/20', border: 'border-cyan-500/20', text: 'text-cyan-400' },
-  internship: { gradient: 'from-violet-500/20 to-purple-500/20', border: 'border-violet-500/20', text: 'text-violet-400' },
+  hackathon: { gradient: 'from-amber-500/20 to-blue-500/20', border: 'border-amber-500/20', text: 'text-amber-600 dark:text-amber-400' },
+  internship: { gradient: 'from-orange-500/20 to-purple-500/20', border: 'border-orange-500/20', text: 'text-teal-700 dark:text-teal-400' },
   scholarship: { gradient: 'from-emerald-500/20 to-teal-500/20', border: 'border-emerald-500/20', text: 'text-emerald-400' },
   oss: { gradient: 'from-amber-500/20 to-orange-500/20', border: 'border-amber-500/20', text: 'text-amber-400' },
   ambassador: { gradient: 'from-pink-500/20 to-rose-500/20', border: 'border-pink-500/20', text: 'text-pink-400' },
@@ -57,7 +57,7 @@ export function OpportunityCard({
   const TypeIcon = typeIcons[type]
 
   return (
-    <Card className="group overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-cyan-500/5">
+    <Card className="group overflow-hidden transition-all duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-amber-500/5">
       <CardContent className="p-0">
         {/* Top accent bar */}
         <div className={`h-1 w-full bg-gradient-to-r ${typeConfig.gradient}`} />
@@ -80,7 +80,7 @@ export function OpportunityCard({
                 )}
               </div>
               <Link href={`/opportunities/${id}`} className="group/link">
-                <h3 className="font-semibold text-base truncate group-hover/link:text-cyan-400 transition-colors">
+                <h3 className="font-semibold text-base truncate group-hover/link:text-amber-400 transition-colors">
                   {title}
                 </h3>
               </Link>
@@ -92,15 +92,17 @@ export function OpportunityCard({
               <Button
                 variant="ghost"
                 size="icon"
+                aria-label={isBookmarked ? `Remove bookmark: ${title}` : `Bookmark ${title}`}
+                aria-pressed={!!isBookmarked}
                 onClick={(e) => {
                   e.preventDefault()
                   onBookmark()
                 }}
-                className="shrink-0 transition-all duration-200 hover:bg-cyan-500/10 hover:text-cyan-400"
+                className="shrink-0 transition-all duration-200 hover:bg-amber-500/10 hover:text-amber-400"
               >
                 <Bookmark
                   className={`h-4 w-4 transition-all ${
-                    isBookmarked ? 'fill-cyan-400 text-cyan-400' : ''
+                    isBookmarked ? 'fill-amber-400 text-amber-600 dark:text-amber-400' : ''
                   }`}
                 />
               </Button>
@@ -134,13 +136,13 @@ export function OpportunityCard({
               </div>
             )}
             {prize && type === 'hackathon' && (
-              <div className="flex items-center gap-1.5 text-sm text-cyan-300">
+              <div className="flex items-center gap-1.5 text-sm text-amber-700 dark:text-amber-300">
                 <Trophy className="h-3.5 w-3.5" />
                 <span className="truncate font-medium">{prize}</span>
               </div>
             )}
             {prize && type === 'internship' && (
-              <div className="flex items-center gap-1.5 text-sm text-violet-300">
+              <div className="flex items-center gap-1.5 text-sm text-teal-700 dark:text-teal-300">
                 <GraduationCap className="h-3.5 w-3.5" />
                 <span className="truncate font-medium">Stipend: {prize}</span>
               </div>

@@ -7,7 +7,8 @@ import { useAuthStore } from '@/stores/auth-store'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Rocket, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
+import { RadarMark } from '@/components/brand/radar-mark'
 
 function GoogleIcon() {
   return (
@@ -60,15 +61,13 @@ function LoginForm() {
   return (
     <Card className="w-full max-w-md relative animate-fade-in-up">
       {/* Gradient top bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-cyan-500 via-violet-500 to-pink-500 rounded-t-xl" />
+      <div className="h-1 w-full bg-gradient-to-r from-amber-500 via-orange-500 to-pink-500 rounded-t-xl" />
 
       <CardHeader className="text-center">
         <div className="flex justify-center mb-3">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-            <Rocket className="h-6 w-6 text-white" />
-          </div>
+          <RadarMark className="w-12 h-12" />
         </div>
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
+        <CardTitle as="h1" className="text-2xl">Welcome back</CardTitle>
         <CardDescription>Sign in to your OpAssist account</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -144,7 +143,7 @@ function LoginForm() {
 
         <div className="text-center text-sm text-muted-foreground">
           Don&apos;t have an account?{' '}
-          <Link href="/get-started" className="text-cyan-400 hover:text-cyan-300 transition-colors font-medium">
+          <Link href="/get-started" className="text-amber-600 dark:text-amber-400 hover:text-amber-300 transition-colors font-medium">
             Get started
           </Link>
         </div>

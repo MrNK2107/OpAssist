@@ -4,52 +4,60 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* OpAssist identity: ink, paper and marigold. See docs/PRODUCT.md#brand */
+    --background: 42 33% 96%;
+    --foreground: 228 45% 10%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 187 85% 42%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 58%;
+    --card-foreground: 228 45% 10%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 228 45% 10%;
+    --secondary: 40 24% 91%;
+    --secondary-foreground: 228 45% 10%;
+    --muted: 40 24% 91%;
+    --muted-foreground: 226 12% 38%;
+    --accent: 160 64% 30%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 6 74% 48%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 160 64% 30%;
+    --success-foreground: 0 0% 100%;
+    --warning: 30 90% 42%;
+    --warning-foreground: 0 0% 100%;
+    --border: 38 18% 84%;
+    --input: 38 18% 80%;
+    --ring: 38 92% 45%;
     --radius: 0.75rem;
+    --ink: 228 45% 10%;
+    --paper: 42 33% 96%;
+    --marigold: 38 92% 50%;
+    --fit: 160 64% 30%;
+    --urgent: 6 74% 48%;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 210 40% 98%;
-    --card: 240 10% 5.9%;
-    --card-foreground: 210 40% 98%;
-    --primary: 262 83% 58%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 187 85% 42%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --success: 142 76% 36%;
-    --success-foreground: 210 40% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 210 40% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 262 83% 58%;
+    --background: 228 45% 8%;
+    --foreground: 40 30% 94%;
+    --card: 228 36% 12%;
+    --card-foreground: 40 30% 94%;
+    --primary: 38 92% 55%;
+    --primary-foreground: 228 45% 10%;
+    --secondary: 228 26% 18%;
+    --secondary-foreground: 40 30% 94%;
+    --muted: 228 26% 18%;
+    --muted-foreground: 226 14% 68%;
+    --accent: 160 55% 48%;
+    --accent-foreground: 228 45% 10%;
+    --destructive: 6 70% 56%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 160 55% 48%;
+    --success-foreground: 228 45% 10%;
+    --warning: 36 92% 58%;
+    --warning-foreground: 228 45% 10%;
+    --border: 228 22% 22%;
+    --input: 228 22% 24%;
+    --ring: 38 92% 55%;
+    --fit: 160 55% 48%;
+    --urgent: 6 70% 60%;
   }
 
   * {
@@ -78,18 +86,6 @@
 }
 
 @layer utilities {
-  .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-violet-400 to-pink-400;
-  }
-
-  .text-gradient-cyan-violet {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-violet-400;
-  }
-
-  .text-gradient-violet-pink {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-400 to-pink-400;
-  }
-
   .bg-glass {
     @apply bg-card/60 backdrop-blur-xl border;
   }
@@ -99,11 +95,11 @@
   }
 
   .bg-gradient-primary {
-    @apply bg-gradient-to-br from-cyan-500 via-violet-500 to-pink-500;
+    @apply bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500;
   }
 
   .bg-gradient-subtle {
-    @apply bg-gradient-to-br from-cyan-500/10 via-violet-500/10 to-pink-500/10;
+    @apply bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-orange-500/10;
   }
 
   .shadow-glow {
@@ -111,7 +107,7 @@
   }
 
   .shadow-glow-cyan {
-    box-shadow: 0 0 20px hsl(187 85% 42% / 0.15);
+    box-shadow: 0 0 20px hsl(38 92% 50% / 0.15);
   }
 
   .animate-shimmer {
@@ -161,4 +157,16 @@
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
+}
+/* Radar sweep used by the brand mark and the landing hero. */
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.radar-sweep {
+  transform-origin: 50% 50%;
+  animation: radar-sweep 6s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .radar-sweep, .animate-float, .animate-pulse-glow { animation: none; }
 }

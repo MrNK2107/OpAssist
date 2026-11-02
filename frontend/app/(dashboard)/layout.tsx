@@ -35,8 +35,8 @@ export default function DashboardLayout({
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="relative">
-          <div className="w-12 h-12 rounded-full border-2 border-cyan-500/30 border-t-cyan-400 animate-spin" />
-          <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-violet-500/30 border-b-violet-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
+          <div className="w-12 h-12 rounded-full border-2 border-amber-500/30 border-t-amber-400 animate-spin" />
+          <div className="absolute inset-0 w-12 h-12 rounded-full border-2 border-orange-500/30 border-b-orange-400 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }} />
         </div>
       </div>
     )
