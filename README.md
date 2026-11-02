@@ -108,7 +108,7 @@ Only the example files are committed: [`.env.example`](.env.example), [`backend/
 | `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY` | Backend database | Yes, for the backend. |
 | `FIREBASE_*` (Admin SDK) | Backend token verification | Yes, for the backend. |
 | `GROQ_API_KEY`, `ANTHROPIC_API_KEY` | AI match endpoints | Optional. |
-| `CORS_ORIGINS`, `SCRAPE_INTERVAL_HOURS`, `ALLOW_DEV_AUTH` | Backend tuning | Optional. |
+| `CORS_ORIGINS`, `SCRAPE_INTERVAL_HOURS`, `ALLOW_DEV_AUTH`, `ENV` | Backend tuning | Optional. `ALLOW_DEV_AUTH` is refused when `ENV=production`. |
 
 ### API
 

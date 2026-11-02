@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight, Trash2, CalendarPlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { columns, STAGES } from '@/lib/radar/board'
-import { downloadIcs } from '@/lib/radar/ics'
+import { downloadIcs, exportableDeadlines } from '@/lib/radar/ics'
 import { byId } from '@/lib/radar/seed'
 import { useRadarStore } from '@/stores/radar-store'
 import { Countdown, KIND_LABEL } from './pieces'
@@ -21,9 +21,12 @@ export function BoardView() {
   const note = useRadarStore((s) => s.note)
   const cols = columns(board)
   const total = Object.keys(board).length
-  const withDeadline = Object.keys(board)
-    .map(byId)
-    .filter((o): o is NonNullable<typeof o> => Boolean(o?.deadline))
+  const withDeadline = exportableDeadlines(
+    Object.keys(board)
+      .map(byId)
+      .filter((o): o is NonNullable<typeof o> => Boolean(o)),
+    asOf,
+  )
 
   return (
     <div className="space-y-6">

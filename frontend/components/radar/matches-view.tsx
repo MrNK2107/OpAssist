@@ -2,8 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import { applyFilters } from '@/lib/radar/filters'
-import { rankOpportunities } from '@/lib/radar/match'
-import { RADAR_OPPORTUNITIES } from '@/lib/radar/seed'
+import { formatDate } from '@/lib/radar/deadline'
+import { rankOpportunities, snapshotAge, STALE_AFTER_DAYS } from '@/lib/radar/match'
+import { RADAR_OPPORTUNITIES, SNAPSHOT_DATE } from '@/lib/radar/seed'
 import { useRadarStore } from '@/stores/radar-store'
 import { FilterBar } from './filter-bar'
 import { MatchCard } from './match-card'
@@ -56,6 +57,12 @@ export function MatchesView() {
           <p className="mt-1 text-sm text-muted-foreground" aria-live="polite">
             <span className="font-mono font-bold text-foreground">{ranked.length}</span> open listings match your filters ·{' '}
             <span className="font-mono font-bold text-fit">{strong}</span> strong fits. Every score shows its reasons.
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Listings hand-checked on <time dateTime={SNAPSHOT_DATE}>{formatDate(SNAPSHOT_DATE)} {SNAPSHOT_DATE.slice(0, 4)}</time>
+            {snapshotAge(asOf) > STALE_AFTER_DAYS
+              ? '. That is over a month ago: listings without a fixed deadline are hidden and none count as verified.'
+              : '.'}
           </p>
         </div>
         <FilterBar />

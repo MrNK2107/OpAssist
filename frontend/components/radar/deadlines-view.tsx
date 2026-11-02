@@ -6,7 +6,7 @@ import { CalendarPlus, Plus, Check } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BUCKET_LABEL, BUCKET_ORDER, deadlineStrip, formatDate, groupByBucket } from '@/lib/radar/deadline'
 import { applyFilters } from '@/lib/radar/filters'
-import { downloadIcs } from '@/lib/radar/ics'
+import { downloadIcs, exportableDeadlines } from '@/lib/radar/ics'
 import { RADAR_OPPORTUNITIES } from '@/lib/radar/seed'
 import type { RadarOpportunity } from '@/lib/radar/types'
 import { useRadarStore } from '@/stores/radar-store'
@@ -78,7 +78,10 @@ export function DeadlinesView() {
   const items = useMemo(() => applyFilters(RADAR_OPPORTUNITIES, filters, profile), [filters, profile])
   const groups = useMemo(() => groupByBucket(items, asOf), [items, asOf])
   const upcoming = BUCKET_ORDER.filter((b) => b !== 'closed' && b !== 'rolling').flatMap((b) => groups[b])
-  const boardOpps = RADAR_OPPORTUNITIES.filter((o) => board[o.id] && o.deadline)
+  const boardOpps = exportableDeadlines(
+    RADAR_OPPORTUNITIES.filter((o) => board[o.id]),
+    asOf,
+  )
 
   return (
     <div className="space-y-6">

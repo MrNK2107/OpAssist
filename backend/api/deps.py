@@ -49,12 +49,15 @@ async def get_current_user_id(
     """Extract user_id from Firebase ID token.
 
     In development without Firebase configured, returns a mock user_id
-    only if ALLOW_DEV_AUTH=true is set in the environment.
+    only if ALLOW_DEV_AUTH=true is set and ENV is not production (in production
+    the flag is refused, so a stray .env can't open every account).
     """
     app = _get_firebase_app()
 
     if app is None:
-        if not settings.allow_dev_auth:
+        if settings.allow_dev_auth and settings.is_production:
+            logger.error("ALLOW_DEV_AUTH is set but ENV=production: refusing the mock user.")
+        if not settings.dev_auth_enabled:
             raise HTTPException(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                 detail="Authentication service not configured. Set Firebase credentials in environment variables.",

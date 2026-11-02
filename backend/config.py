@@ -32,7 +32,10 @@ class Settings(BaseSettings):
     scrape_interval_hours: int = 6
     min_salary: int = 0
 
-    # Dev Auth
+    # Deployment environment ("development", "staging", "production")
+    env: str = "development"
+
+    # Dev Auth: mock user when Firebase isn't configured. Ignored when env is production.
     allow_dev_auth: bool = False
 
     # Server
@@ -41,6 +44,15 @@ class Settings(BaseSettings):
 
     # CORS - comma-separated list of allowed origins
     cors_origins: str = "http://localhost:3000"
+
+    @property
+    def is_production(self) -> bool:
+        return self.env.strip().lower() == "production"
+
+    @property
+    def dev_auth_enabled(self) -> bool:
+        """ALLOW_DEV_AUTH, unless ENV=production: there it is always refused."""
+        return self.allow_dev_auth and not self.is_production
 
     @property
     def cors_origins_list(self) -> list[str]:

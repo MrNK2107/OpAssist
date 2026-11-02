@@ -170,6 +170,23 @@ export function stableId(...parts: string[]): string {
   return (h >>> 0).toString(36)
 }
 
+/** The url if it parses as an https URL without credentials, else ''. Seed data is
+ * hand-collected; anything else (http, javascript:, CR/LF tricks) is blanked, not trusted. */
+export function safeHttpsUrl(raw: string | null | undefined): string {
+  if (!raw) return ''
+  const trimmed = raw.trim()
+  // the URL parser silently strips tabs and newlines; refuse control characters outright
+  if ([...trimmed].some((c) => c.charCodeAt(0) < 0x20 || c.charCodeAt(0) === 0x7f)) return ''
+  let u: URL
+  try {
+    u = new URL(trimmed)
+  } catch {
+    return ''
+  }
+  if (u.protocol !== 'https:' || u.username || u.password || !u.hostname) return ''
+  return u.href
+}
+
 export function normalizeItem(item: SeedItem): RadarOpportunity {
   const topicText = `${item.topics} ${item.title}`
   const deadline = item.deadline && /^\d{4}-\d{2}-\d{2}$/.test(item.deadline) ? item.deadline : null
@@ -178,7 +195,7 @@ export function normalizeItem(item: SeedItem): RadarOpportunity {
     kind: item.kind,
     title: item.title,
     organizer: item.organizer,
-    url: item.url,
+    url: safeHttpsUrl(item.url),
     mode: parseMode(item.mode),
     city: parseCity(item.city),
     cityText: item.city,

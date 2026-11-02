@@ -1,6 +1,9 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 export function proxy(request: NextRequest) {
+  // UI hint only, not a security boundary: anyone can set this cookie. It just decides
+  // whether to show the login page or the app shell. Every data request is authorised by
+  // the backend verifying the Firebase ID token (backend/api/deps.py).
   const isAuthenticated = request.cookies.get('firebase-auth')?.value === 'true'
 
   const protectedPaths = ['/dashboard', '/profile', '/bookmarks', '/applications', '/calendar', '/leaderboard', '/team-finder', '/notifications', '/opportunities']

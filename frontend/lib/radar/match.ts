@@ -3,7 +3,8 @@
 // every hard blocker comes with a caution. No model, no black box.
 
 import { canonicalSkill, SKILL_SYNONYMS } from './normalize'
-import { daysUntil } from './deadline'
+import { daysUntil, formatDate } from './deadline'
+import { SNAPSHOT_DATE } from './seed'
 import type { MatchResult, RadarOpportunity, StudentProfile } from './types'
 
 const ORD = ['', '1st', '2nd', '3rd', '4th', '5th']
@@ -19,6 +20,15 @@ export const WEIGHTS = {
   free: 5,
   verified: 5,
 } as const
+
+/** After this many days the snapshot is stale: "verified" earns nothing and listings
+ * without a deadline are no longer assumed to be open. */
+export const STALE_AFTER_DAYS = 30
+
+/** Days since the listings were hand-checked. */
+export function snapshotAge(asOf: string, snapshotDate: string = SNAPSHOT_DATE): number {
+  return -daysUntil(snapshotDate, asOf)
+}
 
 const MAX = WEIGHTS.skillCap + WEIGHTS.sameCity + WEIGHTS.year + WEIGHTS.solo + WEIGHTS.free + WEIGHTS.verified
 
@@ -59,7 +69,12 @@ export function eligibility(profile: StudentProfile, opp: RadarOpportunity): str
   return blockers
 }
 
-export function scoreOpportunity(profile: StudentProfile, opp: RadarOpportunity, asOf: string): MatchResult {
+export function scoreOpportunity(
+  profile: StudentProfile,
+  opp: RadarOpportunity,
+  asOf: string,
+  snapshotDate: string = SNAPSHOT_DATE,
+): MatchResult {
   const reasons: string[] = []
   const cautions: string[] = []
   let points = 0
@@ -107,8 +122,10 @@ export function scoreOpportunity(profile: StudentProfile, opp: RadarOpportunity,
   if (opp.free) points += WEIGHTS.free
   else cautions.push('Entry fee not confirmed')
 
-  if (opp.verified) {
+  if (opp.verified && snapshotAge(asOf, snapshotDate) <= STALE_AFTER_DAYS) {
     points += WEIGHTS.verified
+  } else if (opp.verified) {
+    cautions.push(`Last checked ${formatDate(snapshotDate)}; confirm on the organiser page`)
   } else {
     cautions.push('Details not yet re-verified')
   }
@@ -129,11 +146,18 @@ export function scoreOpportunity(profile: StudentProfile, opp: RadarOpportunity,
   return { opportunity: opp, score, label, reasons, cautions, eligible }
 }
 
-/** Rank open opportunities for a profile: best fit first, sooner deadline breaks ties. */
-export function rankOpportunities(profile: StudentProfile, opps: RadarOpportunity[], asOf: string): MatchResult[] {
+/** Rank open opportunities for a profile: best fit first, sooner deadline breaks ties.
+ * A listing with no deadline counts as open only while the snapshot is fresh. */
+export function rankOpportunities(
+  profile: StudentProfile,
+  opps: RadarOpportunity[],
+  asOf: string,
+  snapshotDate: string = SNAPSHOT_DATE,
+): MatchResult[] {
+  const fresh = snapshotAge(asOf, snapshotDate) <= STALE_AFTER_DAYS
   return opps
-    .filter((o) => !o.deadline || daysUntil(o.deadline, asOf) >= 0)
-    .map((o) => scoreOpportunity(profile, o, asOf))
+    .filter((o) => (o.deadline ? daysUntil(o.deadline, asOf) >= 0 : fresh))
+    .map((o) => scoreOpportunity(profile, o, asOf, snapshotDate))
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score
       return (a.opportunity.deadline ?? '9999').localeCompare(b.opportunity.deadline ?? '9999')
